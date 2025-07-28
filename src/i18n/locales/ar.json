@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "نظام إدارة الشركة"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور",
+    "loginButton": "دخول",
+    "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صالحة"
+  },
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "accomplishments": "المهمات",
+    "employees": "الموظفين",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "welcome": "مرحبا",
+    "todayTasks": "مهام اليوم",
+    "recentAccomplishments": "المهمات الأخيرة",
+    "pendingReviews": "مراجعات معلقة",
+    "totalEmployees": "إجمالي الموظفين"
+  },
+  "accomplishments": {
+    "title": "المهمات",
+    "add": "إضافة مهمة",
+    "description": "الوصف",
+    "date": "التاريخ",
+    "files": "الملفات",
+    "uploadFiles": "تحميل الملفات",
+    "submit": "إرسال",
+    "review": "تم",
+    "reviewed": "تمت المراجعة",
+    "notReviewed": "لم تتم المراجعة",
+    "addComment": "إضافة تعليق",
+    "comment": "تعليق",
+    "comments": "التعليقات",
+    "noComments": "لا توجد تعليقات حتى الآن",
+    "noAccomplishments": "لم يتم العثور على إنجازات",
+    "filter": "تصفية",
+    "filterByDate": "تصفية حسب التاريخ",
+    "filterByEmployee": "تصفية حسب الموظف",
+    "startDate": "تاريخ البداية",
+    "endDate": "تاريخ النهاية",
+    "applyFilter": "تطبيق التصفية",
+    "clearFilter": "مسح التصفية",
+    "export": "تصدير إلى إكسل",
+    "needsModification": "يحتاج إلى تعديل",
+    "reply": "رد"
+  },
+  "employees": {
+    "title": "الموظفين",
+    "add": "إضافة موظف",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "create": "إنشاء حساب",
+    "compare": "مقارنة الموظفين",
+    "select": "اختر موظفين للمقارنة",
+    "compareSelected": "مقارنة المحدد",
+    "noEmployees": "لم يتم العثور على موظفين",
+    "employeesSelected": "تم تحديد {{count}} موظفين"
+  },
+  "notifications": {
+    "newAccomplishment": "تم تقديم إنجاز جديد بواسطة {{name}}",
+    "accomplishmentReviewed": "تمت مراجعة إنجازك",
+    "newComment": "تعليق جديد على إنجازك"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ",
+    "success": "تم بنجاح",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "back": "رجوع",
+    "actions": "إجراءات"
+  }
+}

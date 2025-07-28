@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "Company Management System"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password",
+    "loginButton": "Login",
+    "invalidCredentials": "Invalid email or password"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "accomplishments": "Accomplishments",
+    "employees": "Employees",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "todayTasks": "Today's Tasks",
+    "recentAccomplishments": "Recent Accomplishments",
+    "pendingReviews": "Pending Reviews",
+    "totalEmployees": "Total Employees"
+  },
+  "accomplishments": {
+    "title": "Accomplishments",
+    "add": "Add Accomplishment",
+    "description": "Description",
+    "date": "Date",
+    "files": "Files",
+    "uploadFiles": "Upload Files",
+    "submit": "Submit",
+    "review": "Review",
+    "reviewed": "Reviewed",
+    "notReviewed": "Not Reviewed",
+    "addComment": "Add Comment",
+    "comment": "Comment",
+    "comments": "Comments",
+    "noComments": "No comments yet",
+    "noAccomplishments": "No accomplishments found",
+    "filter": "Filter",
+    "filterByDate": "Filter by Date",
+    "filterByEmployee": "Filter by Employee",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "applyFilter": "Apply Filter",
+    "clearFilter": "Clear Filter",
+    "export": "Export to Excel",
+    "needsModification": "Needs modification",
+    "reply":"reply"
+  },
+  "employees": {
+    "title": "Employees",
+    "add": "Add Employee",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "create": "Create Account",
+    "compare": "Compare Employees",
+    "select": "Select Employees to Compare",
+    "compareSelected": "Compare Selected",
+    "noEmployees": "No employees found",
+    "employeesSelected": "{{count}} employees selected"
+  },
+  "notifications": {
+    "newAccomplishment": "New accomplishment submitted by {{name}}",
+    "accomplishmentReviewed": "Your accomplishment has been reviewed",
+    "newComment": "New comment on your accomplishment"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "actions": "Actions"
+  }
+}
