@@ -322,16 +322,18 @@ const AccomplishmentDetails = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {accomplishment.files.map((file) => (
-                  <a
-                    key={file._id}
-                    href={`http://localhost:5000/${file.filePath}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center p-2 border rounded-md hover:bg-muted/50 transition-colors"
-                  >
-                    <LucideFileText className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm truncate">{file.fileName}</span>
-                  </a>
+                  <>
+                    <a
+                      key={file._id}
+                      href={`http://localhost:5000${file.filePath}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center p-2 border rounded-md hover:bg-muted/50 transition-colors"
+                    >
+                      <LucideFileText className="h-4 w-4 ml-2 text-muted-foreground" />
+                      <span className="text-sm truncate">{file.fileName}</span>
+                    </a>
+                  </>
                 ))}
               </div>
             </div>

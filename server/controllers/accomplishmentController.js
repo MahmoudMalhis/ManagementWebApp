@@ -31,7 +31,7 @@ exports.createAccomplishment = async (req, res) => {
       req.files.forEach((file) => {
         files.push({
           fileName: file.originalname,
-          filePath: file.path,
+          filePath: `/uploads/${file.filename}`,
           fileType: file.mimetype,
         });
       });
