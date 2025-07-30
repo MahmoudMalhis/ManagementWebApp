@@ -5,14 +5,7 @@ import { accomplishmentsAPI } from "@/api/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocket } from "@/contexts/SocketContext";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +20,7 @@ import {
   LucideSend,
   LucideCheck,
 } from "lucide-react";
+import ModifyForm from "@/components/ModifyForm";
 
 interface Comment {
   _id: string;
@@ -37,6 +31,8 @@ interface Comment {
     name: string;
     role: string;
   };
+  isReply?: boolean;
+  replyTo?: string;
 }
 
 interface File {
@@ -57,7 +53,6 @@ interface Accomplishment {
   employee: {
     _id: string;
     name: string;
-    email: string;
   };
 }
 
@@ -77,23 +72,29 @@ const AccomplishmentDetails = () => {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+
+  const fetchAccomplishment = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await accomplishmentsAPI.getAccomplishment(id!);
+      setAccomplishment(response.data);
+    } catch (err) {
+      console.error("Error fetching accomplishment:", err);
+      setError(err.message || "Failed to load accomplishment details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleModifySuccess = () => {
+    fetchAccomplishment();
+  };
 
   useEffect(() => {
-    const fetchAccomplishment = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await accomplishmentsAPI.getAccomplishment(id!);
-        setAccomplishment(response.data);
-      } catch (err) {
-        console.error("Error fetching accomplishment:", err);
-        setError(err.message || "Failed to load accomplishment details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAccomplishment();
   }, [id]);
 
@@ -139,19 +140,16 @@ const AccomplishmentDetails = () => {
     }
   };
 
+  // تحديث حالة الإنجاز بعد المراجعة
   const handleReviewAccomplishment = async (status: string) => {
     try {
       setReviewing(true);
-
       await accomplishmentsAPI.reviewAccomplishment(id!, status);
 
-      // إعادة جلب بيانات الإنجاز بعد التحديث
-      const accomplishmentResponse = await accomplishmentsAPI.getAccomplishment(
-        id!
-      );
-      setAccomplishment(accomplishmentResponse.data);
+      // إعادة جلب البيانات للتأكد من التحديث
+      await fetchAccomplishment();
 
-      // إرسال إشعار أو أي منطق إضافي هنا
+      // إرسال الإشعارات
       sendAccomplishmentReviewed(id!, accomplishment!.employee._id);
 
       toast({
@@ -173,8 +171,16 @@ const AccomplishmentDetails = () => {
 
   // Format date function
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+      return date.toLocaleString();
+    } catch (err) {
+      console.error("Error formatting date:", err);
+      return "Invalid Date";
+    }
   };
 
   if (loading) {
@@ -202,6 +208,47 @@ const AccomplishmentDetails = () => {
       </Card>
     );
   }
+
+  const handleReplySubmit = async (e: React.FormEvent, commentId: string) => {
+    e.preventDefault();
+
+    if (!replyText.trim()) {
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description:
+          t("accomplishments.reply") + " " + t("common.error").toLowerCase(),
+      });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await accomplishmentsAPI.replyToComment(
+        id!,
+        commentId,
+        replyText
+      );
+      setAccomplishment(response.data);
+      setReplyText("");
+      setReplyTo(null);
+
+      toast({
+        title: t("common.success"),
+        description:
+          t("accomplishments.reply") + " " + t("common.success").toLowerCase(),
+      });
+    } catch (err) {
+      console.error("Error replying:", err);
+      toast({
+        variant: "destructive",
+        title: t("common.error"),
+        description: err.message || t("common.error"),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -316,32 +363,65 @@ const AccomplishmentDetails = () => {
                 ) : (
                   <LucideCheck className="h-4 w-4" />
                 )}
-                {
-                  t(
-                    "accomplishments.needsModification"
-                  ) /* أضف الترجمة في ملف الترجمة */
-                }
+                {t("accomplishments.needsModification")}
               </Button>
             </div>
           )}
 
           <Separator />
-
+          {isManager && accomplishment.status !== "reviewed" && (
+            <form onSubmit={handleAddComment} className="space-y-2 mt-6">
+              <Textarea
+                placeholder={t("accomplishments.addComment")}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={2}
+              />
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex items-center gap-2"
+                >
+                  {submitting ? (
+                    <LucideLoader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LucideSend className="h-4 w-4" />
+                  )}
+                  {t("accomplishments.addComment")}
+                </Button>
+              </div>
+            </form>
+          )}
           {/* Comments */}
-          <div className="space-y-4">
-            <h3 className="font-medium">{t("accomplishments.comments")}</h3>
+          {accomplishment.comments
+            .filter((comment) => !comment.isReply)
+            .sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime()
+            )
+            .map((comment) => {
+              const replies = accomplishment.comments
+                .filter(
+                  (reply) => reply.isReply && reply.replyTo === comment._id
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(a.createdAt).getTime() -
+                    new Date(b.createdAt).getTime()
+                );
 
-            {/* Comments list */}
-            <div className="space-y-4">
-              {accomplishment.comments && accomplishment.comments.length > 0 ? (
-                accomplishment.comments.map((comment) => (
-                  <div key={comment._id} className="flex gap-3">
+              return (
+                <div key={comment._id} className="space-y-2">
+                  {/* Main Comment */}
+                  <div className="flex gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>
                         {comment.commentedBy.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="space-y-1 flex-1">
+                    <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
                         <div className="font-medium text-sm">
                           {comment.commentedBy.name}
@@ -351,41 +431,101 @@ const AccomplishmentDetails = () => {
                         </div>
                       </div>
                       <p className="text-sm">{comment.text}</p>
+
+                      {/* زر الرد */}
+                      {accomplishment.status !== "reviewed" && (
+                        <Button
+                          size="sm"
+                          variant="link"
+                          className="text-xs text-blue-600 hover:underline"
+                          onClick={() =>
+                            setReplyTo(
+                              replyTo === comment._id ? null : comment._id
+                            )
+                          }
+                        >
+                          {t("accomplishments.reply")}
+                        </Button>
+                      )}
+
+                      {/* نموذج الرد */}
+                      {replyTo === comment._id && (
+                        <form
+                          onSubmit={(e) => handleReplySubmit(e, comment._id)}
+                          className="mt-2 space-y-2"
+                        >
+                          <Textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder={t("accomplishments.writeReply")}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              type="button"
+                              onClick={() => {
+                                setReplyText("");
+                                setReplyTo(null);
+                              }}
+                            >
+                              {t("common.cancel")}
+                            </Button>
+                            <Button type="submit" disabled={submitting}>
+                              {submitting ? (
+                                <LucideLoader className="h-4 w-4 animate-spin" />
+                              ) : (
+                                t("accomplishments.reply")
+                              )}
+                            </Button>
+                          </div>
+                        </form>
+                      )}
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {t("accomplishments.noComments")}
-                </p>
-              )}
-            </div>
 
-            {/* Add comment form - for managers only */}
-            {isManager && (
-              <form onSubmit={handleAddComment} className="space-y-2">
-                <Textarea
-                  placeholder={t("accomplishments.addComment")}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex items-center gap-2"
-                  >
-                    {submitting ? (
-                      <LucideLoader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <LucideSend className="h-4 w-4" />
-                    )}
-                    {t("accomplishments.addComment")}
-                  </Button>
+                  {/* Replies */}
+                  {replies.length > 0 && (
+                    <div className="ml-10 space-y-2">
+                      {replies.map((reply) => (
+                        <div
+                          key={reply._id}
+                          className={`flex gap-3 p-2 rounded-md ${
+                            reply.commentedBy.role === "manager"
+                              ? "bg-blue-100"
+                              : "bg-muted/100"
+                          }`}
+                        >
+                          <Avatar className="h-7 w-7">
+                            <AvatarFallback>
+                              {reply.commentedBy.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium text-sm">
+                                {reply.commentedBy.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatDate(reply.createdAt)}
+                              </div>
+                            </div>
+                            <p className="text-sm">{reply.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </form>
+              );
+            })}
+          {accomplishment.status === "needs_modification" &&
+            user?._id === accomplishment.employee._id && (
+              <ModifyForm
+                accomplishmentId={accomplishment._id}
+                oldDescription={accomplishment.description}
+                onModified={handleModifySuccess}
+              />
             )}
-          </div>
         </CardContent>
       </Card>
     </div>

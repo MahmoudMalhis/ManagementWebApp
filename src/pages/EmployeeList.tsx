@@ -22,9 +22,8 @@ import {
 } from "lucide-react";
 
 interface Employee {
-  id: string;
+  _id: string;
   name: string;
-  email: string;
   role: string;
   createdAt: string;
 }
@@ -113,27 +112,27 @@ const EmployeeList = () => {
                     <TableHead className="w-12">
                       <span className="sr-only">Select</span>
                     </TableHead>
-                    <TableHead>{t("employees.name")}</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      {t("employees.email")}
+                    <TableHead className="text-start">
+                      {t("employees.name")}
                     </TableHead>
-                    <TableHead className="hidden md:table-cell">
+                    <TableHead className="hidden md:table-cell text-start">
                       {t("employees.role")}
                     </TableHead>
-                    <TableHead className="text-right">
+                    <TableHead className="text-start">
                       {t("common.actions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employees.map((employee) => (
-                    <TableRow key={employee.id}>
+                  {employees?.map((employee) => (
+                    <TableRow key={employee._id}>
                       <TableCell>
                         <Checkbox
-                          checked={selectedEmployees.includes(employee.id)}
+                          checked={selectedEmployees.includes(employee._id)}
                           onCheckedChange={() =>
-                            handleCheckboxChange(employee.id)
+                            handleCheckboxChange(employee._id)
                           }
+                          className="mr-3"
                         />
                       </TableCell>
                       <TableCell className="font-medium flex items-center gap-2">
@@ -141,13 +140,10 @@ const EmployeeList = () => {
                         {employee.name}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {employee.email}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
                         {employee.role === "employee" ? "موظف" : "مدير"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link to={`/accomplishments?employee=${employee.id}`}>
+                        <Link to={`/accomplishments?employee=${employee._id}`}>
                           <Button
                             variant="outline"
                             size="sm"

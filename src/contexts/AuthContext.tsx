@@ -13,7 +13,6 @@ interface User {
   _id: string;
   id: string;
   name: string;
-  email: string;
   role: "manager" | "employee";
 }
 
@@ -22,7 +21,7 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (name: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   isManager: boolean;
@@ -66,12 +65,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     verifyToken();
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (name: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(name, password);
 
       const { token: newToken, user: userData } = response;
 

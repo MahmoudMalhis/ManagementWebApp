@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api';
@@ -27,12 +28,16 @@ api.interceptors.request.use(
 // Authentication API calls
 export const authAPI = {
   // Login user
-  login: async (email: string, password: string) => {
+  login: async (name: string, password: string) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', { name, password });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Server error' };
+      if (error.response) {
+      throw error.response.data || { message: 'Login failed' };
+    } else {
+      throw { message: 'Network error' };
+    }
     }
   },
 
@@ -47,9 +52,9 @@ export const authAPI = {
   },
 
   // Register employee (manager only)
-  registerEmployee: async (name: string, email: string, password: string) => {
+  registerEmployee: async (name: string, password: string) => {
     try {
-      const response = await api.post('/auth/register', { name, email, password });
+      const response = await api.post('/auth/register', { name, password });
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Server error' };

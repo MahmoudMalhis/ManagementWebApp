@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { authAPI, accomplishmentsAPI } from "@/api/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,7 +43,6 @@ interface Accomplishment {
   employee: {
     _id: string;
     name: string;
-    email: string;
   };
 }
 
@@ -55,6 +54,8 @@ interface Employee {
 const AccomplishmentsList = () => {
   const { t } = useTranslation();
   const { isManager } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [accomplishments, setAccomplishments] = useState<Accomplishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +81,20 @@ const AccomplishmentsList = () => {
       }
     };
 
+    const params = new URLSearchParams(location.search);
+    const employeeId = params.get("employee") || "";
+
+    // إذا كان الموظف غير محدد في الفلاتر، عيّنه من الباراميتر
+    if (employeeId && selectedEmployee !== employeeId) {
+      setSelectedEmployee(employeeId);
+    }
+    // لو حابب يرجع للكل في حال حذف الباراميتر
+    else if (!employeeId && selectedEmployee) {
+      setSelectedEmployee("");
+    }
+
     fetchEmployees();
-  }, [isManager]);
+  }, [isManager, location.search, selectedEmployee]);
 
   // Fetch accomplishments with filters
   useEffect(() => {
@@ -144,6 +157,26 @@ const AccomplishmentsList = () => {
     setStartDate("");
     setEndDate("");
   };
+
+  const handleEmployeeChange = (value: string) => {
+    setSelectedEmployee(value);
+    if (value && value !== "all") {
+      navigate(`/accomplishments?employee=${value}`);
+    } else {
+      navigate(`/accomplishments`);
+    }
+  };
+
+  const params = new URLSearchParams(location.search);
+  const statusParam = params.get("status");
+
+  let accomplishmentsToDisplay = accomplishments;
+
+  if (statusParam === "notReviewed") {
+    accomplishmentsToDisplay = accomplishments.filter(
+      (acc) => acc.status !== "reviewed"
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -221,7 +254,7 @@ const AccomplishmentsList = () => {
                   </Label>
                   <Select
                     value={selectedEmployee}
-                    onValueChange={setSelectedEmployee}
+                    onValueChange={handleEmployeeChange}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={t("employees.select")} />
@@ -241,6 +274,16 @@ const AccomplishmentsList = () => {
               )}
 
               {/* Date filters */}
+
+              <div className="space-y-1">
+                <Label htmlFor="endDate">{t("accomplishments.endDate")}</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
               <div className="space-y-1">
                 <Label htmlFor="startDate">
                   {t("accomplishments.startDate")}
@@ -250,16 +293,6 @@ const AccomplishmentsList = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="endDate">{t("accomplishments.endDate")}</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
             </div>
@@ -286,8 +319,8 @@ const AccomplishmentsList = () => {
       ) : (
         // Accomplishments list
         <div className="grid gap-4">
-          {accomplishments.length > 0 ? (
-            accomplishments.map((accomplishment) => (
+          {accomplishmentsToDisplay.length > 0 ? (
+            accomplishmentsToDisplay.map((accomplishment) => (
               <Card key={accomplishment._id}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">

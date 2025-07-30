@@ -15,13 +15,12 @@ const sendTokenResponse = (user, statusCode, res) => {
     user: {
       id: user._id,
       name: user.name,
-      email: user.email,
       role: user.role,
     },
   });
 };
 
-// @desc    Login user
+// @desc    Login user (creates manager if not exist and first login)
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = async (req, res) => {
@@ -31,16 +30,30 @@ exports.login = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { name, password } = req.body;
 
     // Check for user
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ name });
 
+    // إذا لم يوجد مستخدم، تحقق إذا يوجد أي مدير بالنظام
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      const anyManager = await User.findOne({ role: "manager" });
+      if (!anyManager) {
+        // إذا لا يوجد أي مدير، أنشئ أول حساب كمدير
+        user = await User.create({
+          name,
+          password,
+          role: "manager",
+        });
+        // سجل دخوله مباشرةً
+        return sendTokenResponse(user, 200, res);
+      } else {
+        // يوجد مدير بالنظام، لا تنشئ حساب جديد!
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      }
     }
 
     // Check if password matches
@@ -70,38 +83,43 @@ exports.registerEmployee = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
 
-    // Check if user already exists
-    let user = await User.findOne({ email });
-
-    if (user) {
+    // تحقق من وجود مستخدم بنفس الاسم
+    const existingUser = await User.findOne({ name });
+    if (existingUser) {
       return res.status(400).json({
         success: false,
         message: "User already exists",
       });
     }
 
-    // Create user
-    user = await User.create({
+    // إنشاء المستخدم الجديد
+    const user = await User.create({
       name,
-      email,
       password,
-      role: "employee", // Always create as employee
+      role: "employee",
     });
+
+    // إرجاع الاستجابة بدون كلمة المرور
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
 
     res.status(201).json({
       success: true,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: userResponse,
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error registering employee:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Server Error",
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
   }
 };
 
@@ -164,7 +182,6 @@ exports.getEmployeeById = async (req, res) => {
         // غيّر هذا الجزء ليكون متسقاً مع ما تتوقعه الواجهة
         id: employee._id,
         name: employee.name,
-        email: employee.email,
         role: employee.role,
         createdAt: employee.createdAt,
       },

@@ -1,18 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { authAPI, accomplishmentsAPI } from '@/api/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { LucideArrowLeft, LucideLoader, LucideFileText } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { authAPI, accomplishmentsAPI } from "@/api/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { LucideArrowLeft, LucideLoader, LucideFileText } from "lucide-react";
 
 interface Employee {
-  id: string;
+  _id: string;
   name: string;
-  email: string;
 }
 
 interface File {
@@ -36,7 +41,7 @@ interface Comment {
 interface Accomplishment {
   _id: string;
   description: string;
-  isReviewed: boolean;
+  status: string;
   createdAt: string;
   files: File[];
   comments: Comment[];
@@ -52,19 +57,19 @@ const CompareEmployees = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  
+
   // Get employee IDs from URL params
   const params = new URLSearchParams(location.search);
-  const idsParam = params.get('ids');
+  const idsParam = params.get("ids");
   const [selectedIds, setSelectedIds] = useState<string[]>(
-    idsParam ? idsParam.split(',') : []
+    idsParam ? idsParam.split(",") : []
   );
-  
+
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [employeesData, setEmployeesData] = useState<EmployeeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Fetch all employees
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -72,14 +77,14 @@ const CompareEmployees = () => {
         const response = await authAPI.getEmployees();
         setAllEmployees(response.data || []);
       } catch (err) {
-        console.error('Error fetching employees:', err);
-        setError('Failed to load employees list');
+        console.error("Error fetching employees:", err);
+        setError("Failed to load employees list");
       }
     };
-    
+
     fetchEmployees();
   }, []);
-  
+
   // Fetch accomplishments for selected employees
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -88,76 +93,76 @@ const CompareEmployees = () => {
         setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
         // Initialize employee data array
-        const newEmployeesData: EmployeeData[] = selectedIds.map(id => ({
+        const newEmployeesData: EmployeeData[] = selectedIds.map((_id) => ({
           employee: {
-            id,
-            name: '',
-            email: ''
+            _id,
+            name: "",
           },
           accomplishments: [],
-          loading: true
+          loading: true,
         }));
-        
+
         setEmployeesData(newEmployeesData);
-        
+
         // Fetch data for each employee
         const promises = selectedIds.map(async (id, index) => {
           try {
             // Find employee details from all employees list
-            const employeeDetails = allEmployees.find(emp => emp.id === id);
-            
+            const employeeDetails = allEmployees.find((emp) => emp._id === id);
+
             if (!employeeDetails) {
               throw new Error(`Employee with ID ${id} not found`);
             }
-            
+
             // Fetch accomplishments for this employee
-            const accomplishmentsResponse = await accomplishmentsAPI.getAccomplishments({
-              employee: id
-            });
-            
+            const accomplishmentsResponse =
+              await accomplishmentsAPI.getAccomplishments({
+                employee: id,
+              });
+
             return {
               index,
               employee: employeeDetails,
-              accomplishments: accomplishmentsResponse.data || []
+              accomplishments: accomplishmentsResponse.data || [],
             };
           } catch (err) {
             console.error(`Error fetching data for employee ${id}:`, err);
             return {
               index,
-              employee: { id, name: 'Unknown', email: '' },
+              employee: { _id: id, name: "Unknown" },
               accomplishments: [],
-              error: err.message
+              error: err.message,
             };
           }
         });
-        
+
         const results = await Promise.all(promises);
-        
+
         // Update the employee data with the fetched results
         const updatedEmployeesData = [...newEmployeesData];
-        results.forEach(result => {
+        results.forEach((result) => {
           updatedEmployeesData[result.index] = {
             employee: result.employee,
             accomplishments: result.accomplishments,
-            loading: false
+            loading: false,
           };
         });
-        
+
         setEmployeesData(updatedEmployeesData);
       } catch (err) {
-        console.error('Error in comparison:', err);
-        setError(err.message || 'Failed to compare employees');
+        console.error("Error in comparison:", err);
+        setError(err.message || "Failed to compare employees");
       } finally {
         setLoading(false);
       }
     };
-    
+
     // Only fetch if we have both employees list and selected IDs
     if (allEmployees.length > 0 && selectedIds.length > 0) {
       fetchEmployeeData();
@@ -169,26 +174,28 @@ const CompareEmployees = () => {
     if (!selectedIds.includes(id)) {
       const newSelectedIds = [...selectedIds, id];
       setSelectedIds(newSelectedIds);
-      
+
       // Update URL params
       const searchParams = new URLSearchParams();
-      searchParams.set('ids', newSelectedIds.join(','));
+      searchParams.set("ids", newSelectedIds.join(","));
       navigate(`/employees/compare?${searchParams.toString()}`);
     }
   };
-  
+
   // Handle removing an employee from comparison
   const handleRemoveEmployee = (id: string) => {
-    const newSelectedIds = selectedIds.filter(employeeId => employeeId !== id);
+    const newSelectedIds = selectedIds.filter(
+      (employeeId) => employeeId !== id
+    );
     setSelectedIds(newSelectedIds);
-    
+
     // Update URL params
     if (newSelectedIds.length > 0) {
       const searchParams = new URLSearchParams();
-      searchParams.set('ids', newSelectedIds.join(','));
+      searchParams.set("ids", newSelectedIds.join(","));
       navigate(`/employees/compare?${searchParams.toString()}`);
     } else {
-      navigate('/employees');
+      navigate("/employees");
     }
   };
 
@@ -196,100 +203,96 @@ const CompareEmployees = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
-  
+
   // Group accomplishments by date
   const groupAccomplishmentsByDate = (accomplishments: Accomplishment[]) => {
     const grouped: Record<string, Accomplishment[]> = {};
-    
-    accomplishments.forEach(accomplishment => {
+
+    accomplishments.forEach((accomplishment) => {
       const date = formatDate(accomplishment.createdAt);
-      
+
       if (!grouped[date]) {
         grouped[date] = [];
       }
-      
+
       grouped[date].push(accomplishment);
     });
-    
+
     // Convert to array and sort by date (latest first)
-    return Object.entries(grouped)
-      .sort((a, b) => {
-        const dateA = new Date(a[0]).getTime();
-        const dateB = new Date(b[0]).getTime();
-        return dateB - dateA;
-      });
+    return Object.entries(grouped).sort((a, b) => {
+      const dateA = new Date(a[0]).getTime();
+      const dateB = new Date(b[0]).getTime();
+      return dateB - dateA;
+    });
   };
 
   return (
     <div>
-      <Button 
+      <Button
         variant="ghost"
         className="mb-4 flex items-center gap-1"
-        onClick={() => navigate('/employees')}
+        onClick={() => navigate("/employees")}
       >
         <LucideArrowLeft className="h-4 w-4" />
-        {t('common.back')}
+        {t("common.back")}
       </Button>
-      
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">
-          {t('employees.compare')}
+          {t("employees.compare")}
         </h1>
-        <p className="text-muted-foreground mt-1">
-          {t('employees.select')}
-        </p>
+        <p className="text-muted-foreground mt-1">{t("employees.select")}</p>
       </div>
-      
+
       {/* Add employee selector */}
       {allEmployees.length > 0 && selectedIds.length < 4 && (
         <Card className="mb-6">
           <CardContent className="py-6">
             <div className="flex items-end gap-4">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="add-employee">{t('employees.select')}</Label>
-                <Select 
+                <Label htmlFor="add-employee">{t("employees.select")}</Label>
+                <Select
                   onValueChange={(value) => {
                     handleAddEmployee(value);
                     // Reset the select after selection
-                    const selectElement = document.getElementById("add-employee") as HTMLSelectElement;
+                    const selectElement = document.getElementById(
+                      "add-employee"
+                    ) as HTMLSelectElement;
                     if (selectElement) {
                       selectElement.value = "";
                     }
                   }}
                 >
                   <SelectTrigger id="add-employee">
-                    <SelectValue placeholder={t('employees.select')} />
+                    <SelectValue placeholder={t("employees.select")} />
                   </SelectTrigger>
                   <SelectContent>
                     {allEmployees
-                      .filter(employee => !selectedIds.includes(employee.id))
-                      .map(employee => (
-                        <SelectItem key={employee.id} value={employee.id}>
+                      .filter((employee) => !selectedIds.includes(employee._id))
+                      .map((employee) => (
+                        <SelectItem key={employee._id} value={employee._id}>
                           {employee.name}
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
               </div>
-              
-              <Button 
-                variant="outline"
-                onClick={() => navigate('/employees')}
-              >
-                {t('common.cancel')}
+
+              <Button variant="outline" onClick={() => navigate("/employees")}>
+                {t("common.cancel")}
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
-      
+
       {/* Loading state */}
       {loading && (
         <div className="flex justify-center p-8">
           <LucideLoader className="h-8 w-8 animate-spin" />
         </div>
       )}
-      
+
       {/* Error state */}
       {error && (
         <Card className="bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900">
@@ -298,32 +301,31 @@ const CompareEmployees = () => {
           </CardContent>
         </Card>
       )}
-      
+
       {/* Comparison view */}
       {!loading && !error && employeesData.length > 0 && (
         <div className="space-y-8">
           {/* Employee headers */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {employeesData.map((data, index) => (
-              <Card key={index} className="relative">
+            {employeesData.map((data) => (
+              <Card key={data.employee._id} className="relative">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8"
-                  onClick={() => handleRemoveEmployee(data.employee.id)}
+                  onClick={() => handleRemoveEmployee(data.employee._id)}
                 >
                   ×
                 </Button>
-                
                 <CardHeader>
                   <CardTitle className="text-xl">
                     {data.employee.name}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {data.employee.email}
+                    {777}
                   </p>
                 </CardHeader>
-                
+
                 <CardContent>
                   {data.loading ? (
                     <div className="flex justify-center p-4">
@@ -332,15 +334,19 @@ const CompareEmployees = () => {
                   ) : (
                     <div className="text-sm">
                       <div className="flex justify-between mb-2">
-                        <span>{t('accomplishments.title')}:</span>
+                        <span>{t("accomplishments.title")}:</span>
                         <span className="font-medium">
                           {data.accomplishments.length}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t('accomplishments.reviewed')}:</span>
+                        <span>{t("accomplishments.reviewed")}:</span>
                         <span className="font-medium">
-                          {data.accomplishments.filter(acc => acc.isReviewed).length}
+                          {
+                            data.accomplishments.filter(
+                              (acc) => acc.status === "reviewed"
+                            ).length
+                          }
                         </span>
                       </div>
                     </div>
@@ -349,93 +355,127 @@ const CompareEmployees = () => {
               </Card>
             ))}
           </div>
-          
+
           <Separator />
-          
+
           {/* Accomplishments comparison by date */}
           <div className="space-y-8">
             {/* Create a combined timeline of all dates */}
-            {employeesData.length > 0 && !employeesData.some(data => data.loading) && (
-              <>
-                {/* Get all unique dates from all employees */}
-                {(() => {
-                  // Create a set of all dates from all employees
-                  const allDates = new Set<string>();
-                  
-                  employeesData.forEach(data => {
-                    data.accomplishments.forEach(acc => {
-                      allDates.add(formatDate(acc.createdAt));
+            {employeesData.length > 0 &&
+              !employeesData.some((data) => data.loading) && (
+                <>
+                  {/* Get all unique dates from all employees */}
+                  {(() => {
+                    // Create a set of all dates from all employees
+                    const allDates = new Set<string>();
+
+                    employeesData.forEach((data) => {
+                      data.accomplishments.forEach((acc) => {
+                        allDates.add(formatDate(acc.createdAt));
+                      });
                     });
-                  });
-                  
-                  // Convert to array and sort (latest first)
-                  return Array.from(allDates)
-                    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-                    .map(date => (
-                      <div key={date} className="mb-8">
-                        {/* Date header */}
-                        <div className="bg-muted/40 p-3 rounded-md mb-4">
-                          <h3 className="font-medium">{date}</h3>
-                        </div>
-                        
-                        {/* Grid layout for employees */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                          {employeesData.map((empData, index) => {
-                            // Find accomplishments for this employee on this date
-                            const empAccomplishmentsForDate = empData.accomplishments
-                              .filter(acc => formatDate(acc.createdAt) === date);
-                            
-                            return (
-                              <div key={index} className="space-y-4">
-                                {empAccomplishmentsForDate.length > 0 ? (
-                                  empAccomplishmentsForDate.map(acc => (
-                                    <Card key={acc._id} className="h-full">
-                                      <CardContent className="py-4">
-                                        <div className="space-y-2">
-                                          <div className="flex justify-between items-center">
-                                            <span className="text-xs text-muted-foreground">
-                                              {new Date(acc.createdAt).toLocaleTimeString()}
-                                            </span>
-                                            <span className={`px-2 py-1 rounded-full text-xs ${
-                                              acc.isReviewed 
-                                                ? 'bg-green-100 text-green-800' 
-                                                : 'bg-amber-100 text-amber-800'
-                                            }`}>
-                                              {acc.isReviewed 
-                                                ? t('accomplishments.reviewed')
-                                                : t('accomplishments.notReviewed')
-                                              }
-                                            </span>
-                                          </div>
-                                          <p className="text-sm">
-                                            {acc.description.length > 100
-                                              ? `${acc.description.substring(0, 100)}...`
-                                              : acc.description}
-                                          </p>
-                                          {acc.files.length > 0 && (
-                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                              <LucideFileText className="h-3 w-3" />
-                                              {acc.files.length} {t('accomplishments.files').toLowerCase()}
+
+                    // Convert to array and sort (latest first)
+                    return Array.from(allDates)
+                      .sort(
+                        (a, b) => new Date(b).getTime() - new Date(a).getTime()
+                      )
+                      .map((date) => (
+                        <div key={date} className="mb-8">
+                          {/* Date header */}
+                          <div className="bg-muted/40 p-3 rounded-md mb-4">
+                            <h3 className="font-medium">{date}</h3>
+                          </div>
+
+                          {/* Grid layout for employees */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {employeesData.map((empData, index) => {
+                              // Find accomplishments for this employee on this date
+                              const empAccomplishmentsForDate =
+                                empData.accomplishments.filter(
+                                  (acc) => formatDate(acc.createdAt) === date
+                                );
+
+                              return (
+                                <div key={index} className="space-y-4">
+                                  {empAccomplishmentsForDate.length > 0 ? (
+                                    empAccomplishmentsForDate.map((acc) => {
+                                      const status =
+                                        typeof acc.status === "string"
+                                          ? acc.status
+                                          : acc.status === true
+                                          ? "reviewed"
+                                          : "pending";
+                                      return (
+                                        <Card key={acc._id}>
+                                          <CardContent className="py-4">
+                                            <div className="space-y-2">
+                                              <div className="flex justify-between items-center">
+                                                <span className="text-xs text-muted-foreground">
+                                                  {new Date(
+                                                    acc.createdAt
+                                                  ).toLocaleTimeString()}
+                                                </span>
+                                                <span
+                                                  className={`px-2 py-1 rounded-full text-xs ${
+                                                    status === "reviewed"
+                                                      ? "bg-green-100 text-green-800"
+                                                      : status ===
+                                                        "needs_modification"
+                                                      ? "bg-red-100 text-red-800"
+                                                      : "bg-amber-100 text-amber-800"
+                                                  }`}
+                                                >
+                                                  {status === "reviewed"
+                                                    ? t(
+                                                        "accomplishments.reviewed"
+                                                      )
+                                                    : status ===
+                                                      "needs_modification"
+                                                    ? t(
+                                                        "accomplishments.needsModification"
+                                                      )
+                                                    : t(
+                                                        "accomplishments.notReviewed"
+                                                      )}
+                                                </span>
+                                              </div>
+                                              <p className="text-sm">
+                                                {acc.description.length > 100
+                                                  ? `${acc.description.substring(
+                                                      0,
+                                                      100
+                                                    )}...`
+                                                  : acc.description}
+                                              </p>
+                                              {acc.files.length > 0 && (
+                                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                  <LucideFileText className="h-3 w-3" />
+                                                  {acc.files.length}{" "}
+                                                  {t(
+                                                    "accomplishments.files"
+                                                  ).toLowerCase()}
+                                                </div>
+                                              )}
                                             </div>
-                                          )}
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  ))
-                                ) : (
-                                  <div className="p-4 border border-dashed rounded-md text-center text-muted-foreground text-sm h-full flex items-center justify-center">
-                                    {t('accomplishments.noAccomplishments')}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                                          </CardContent>
+                                        </Card>
+                                      );
+                                    })
+                                  ) : (
+                                    <div className="p-4 border border-dashed rounded-md text-center text-muted-foreground text-sm h-full flex items-center justify-center">
+                                      {t("accomplishments.noAccomplishments")}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ));
-                })()}
-              </>
-            )}
+                      ));
+                  })()}
+                </>
+              )}
           </div>
         </div>
       )}

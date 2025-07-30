@@ -28,7 +28,6 @@ interface Accomplishment {
   employee: {
     _id: string;
     name: string;
-    email: string;
   };
 }
 
@@ -215,7 +214,7 @@ const Dashboard = () => {
               {t("dashboard.recentAccomplishments")}
             </p>
             <Link to={`/accomplishments?period=${period}`}>
-              <Button variant="outline" className="w-full mt-2">
+              <Button variant="outline" className="w-full mt-3">
                 {t("common.view")}
               </Button>
             </Link>
@@ -238,6 +237,11 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">
                   {t("accomplishments.notReviewed")}
                 </p>
+                <Link to={`/accomplishments?status=notReviewed`}>
+                  <Button variant="outline" className="w-full mt-3">
+                    {t("common.view")}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -255,7 +259,7 @@ const Dashboard = () => {
                   {t("dashboard.totalEmployees")}
                 </p>
                 <div className="flex space-x-2 mt-2">
-                  <Link to="/employees" className="flex-1">
+                  <Link to="/employees" className="flex-1 ml-3">
                     <Button variant="outline" className="w-full">
                       {t("common.view")}
                     </Button>

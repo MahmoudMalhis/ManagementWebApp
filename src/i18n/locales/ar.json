@@ -5,7 +5,7 @@
   "auth": {
     "login": "تسجيل الدخول",
     "logout": "تسجيل الخروج",
-    "email": "البريد الإلكتروني",
+    "name": "اسم المسنحدم",
     "password": "كلمة المرور",
     "forgotPassword": "نسيت كلمة المرور",
     "loginButton": "دخول",
@@ -62,7 +62,7 @@
     "confirmPassword": "تأكيد كلمة المرور",
     "create": "إنشاء حساب",
     "compare": "مقارنة الموظفين",
-    "select": "اختر موظفين للمقارنة",
+    "select": "اختر الموظف",
     "compareSelected": "مقارنة المحدد",
     "noEmployees": "لم يتم العثور على موظفين",
     "employeesSelected": "تم تحديد {{count}} موظفين"

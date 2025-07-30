@@ -318,7 +318,6 @@ exports.modifyAccomplishment = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { description } = req.body;
     const accomplishment = await Accomplishment.findById(req.params.id);
 
     if (!accomplishment) {
@@ -328,7 +327,7 @@ exports.modifyAccomplishment = async (req, res) => {
       });
     }
 
-    // Check if this is the employee's accomplishment
+    // تحقق مما إذا كان هذا إنجاز الموظف
     if (accomplishment.employee.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -336,38 +335,33 @@ exports.modifyAccomplishment = async (req, res) => {
       });
     }
 
-    // Check if the accomplishment needs modification
-    if (accomplishment.status !== "needs_modification") {
-      return res.status(400).json({
-        success: false,
-        message: "This accomplishment is not marked for modification",
-      });
-    }
+    // إزالة شرط التحقق من الحالة "needs_modification"
+    // (أو جعله تحذيراً فقط بدلاً من منع التعديل)
 
-    // Save the current version to previous versions
+    // حفظ النسخة الحالية في الإصدارات السابقة
     accomplishment.previousVersions.push({
       description: accomplishment.description,
       files: accomplishment.files,
       modifiedAt: Date.now(),
     });
 
-    // Update description
-    accomplishment.description = description;
+    // تحديث الوصف
+    accomplishment.description = req.body.description;
 
-    // Handle file uploads for the new version
+    // معالجة تحميل الملفات للإصدار الجديد
     const files = [];
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
         files.push({
           fileName: file.originalname,
-          filePath: file.path,
+          filePath: file.path.replace(/\\/g, "/"),
           fileType: file.mimetype,
         });
       });
       accomplishment.files = files;
     }
 
-    // Reset status to pending
+    // إعادة تعيين الحالة إلى pending
     accomplishment.status = "pending";
 
     await accomplishment.save();
@@ -376,20 +370,26 @@ exports.modifyAccomplishment = async (req, res) => {
       .populate("employee", "name email")
       .populate("comments.commentedBy", "name role");
 
-    // Notify managers about the modification
-    io.to("managers").emit("accomplishmentModified", {
-      accomplishmentId: updatedAccomplishment._id,
-      employeeName: updatedAccomplishment.employee.name,
-      employeeId: updatedAccomplishment.employee._id,
-    });
+    // إعلام المديرين بالتعديل
+    if (io) {
+      io.to("managers").emit("accomplishmentModified", {
+        accomplishmentId: updatedAccomplishment._id,
+        employeeName: updatedAccomplishment.employee.name,
+        employeeId: updatedAccomplishment.employee._id,
+      });
+    }
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: updatedAccomplishment,
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error modifying accomplishment:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: err.message,
+    });
   }
 };
 

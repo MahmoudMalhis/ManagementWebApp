@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { accomplishmentsAPI } from "@/api/api";
 import { Button } from "@/components/ui/button";
@@ -23,29 +24,47 @@ const ModifyForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim()) return;
+    if (!description.trim()) {
+      toast({
+        title: "خطأ",
+        description: "الوصف مطلوب",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const formData = new FormData();
     formData.append("description", description);
+
     if (files && files.length > 0) {
-      Array.from(files).forEach((file) => formData.append("files", file));
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]);
+      }
     }
 
     try {
       setSubmitting(true);
+
       const res = await accomplishmentsAPI.modifyAccomplishment(
         accomplishmentId,
         formData
       );
-      if (onModified) onModified(res.data);
-      toast({
-        title: "تم رفع النسخة المعدلة",
-        description: "بانتظار مراجعة المدير",
-      });
+
+      if (res.success) {
+        // هنا تم التصحيح
+        toast({
+          title: "تم رفع النسخة المعدلة",
+          description: "بانتظار مراجعة المدير",
+        });
+        if (onModified) onModified(res);
+      } else {
+        throw new Error(res.message || "فشل التعديل");
+      }
     } catch (err: any) {
+      console.error("Modification error:", err);
       toast({
         title: "خطأ",
-        description: err.message || "فشل التعديل",
+        description: err.message || "فشل في تعديل الإنجاز",
         variant: "destructive",
       });
     } finally {
@@ -56,7 +75,7 @@ const ModifyForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-2 mt-6 border border-amber-300 p-4 rounded"
+      className="space-y-2 mt-6 border border-gry-300 p-4 rounded"
     >
       <div className="font-semibold text-amber-800 mb-1">إرسال نسخة معدلة</div>
       <Textarea
@@ -79,5 +98,4 @@ const ModifyForm = ({
     </form>
   );
 };
-
 export default ModifyForm;
