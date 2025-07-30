@@ -159,7 +159,7 @@ exports.addComment = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { text } = req.body;
+    const { text, versionIndex } = req.body;
 
     const accomplishment = await Accomplishment.findById(req.params.id);
 
@@ -173,6 +173,7 @@ exports.addComment = async (req, res) => {
     const comment = {
       text,
       commentedBy: req.user.id,
+      versionIndex,
     };
 
     accomplishment.comments.unshift(comment);
@@ -215,7 +216,10 @@ exports.addEmployeeReply = async (req, res) => {
     }
 
     // Check if user is authorized (employee can only reply to their own accomplishments)
-    if (accomplishment.employee.toString() !== req.user.id) {
+    if (
+      accomplishment.employee.toString() !== req.user.id &&
+      req.user.role !== "manager"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to reply to this accomplishment",
@@ -313,64 +317,41 @@ exports.reviewAccomplishment = async (req, res) => {
 // @access  Private/Employee
 exports.modifyAccomplishment = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const accomplishment = await Accomplishment.findById(req.params.id);
-
     if (!accomplishment) {
-      return res.status(404).json({
-        success: false,
-        message: "Accomplishment not found",
-      });
+      return res.status(404).json({ message: "Accomplishment not found" });
     }
 
-    // تحقق مما إذا كان هذا إنجاز الموظف
-    if (accomplishment.employee.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to modify this accomplishment",
-      });
-    }
-
-    // إزالة شرط التحقق من الحالة "needs_modification"
-    // (أو جعله تحذيراً فقط بدلاً من منع التعديل)
-
-    // حفظ النسخة الحالية في الإصدارات السابقة
+    // احفظ النسخة القديمة أولاً
     accomplishment.previousVersions.push({
       description: accomplishment.description,
       files: accomplishment.files,
       modifiedAt: Date.now(),
     });
 
-    // تحديث الوصف
+    // حدّث الوصف
     accomplishment.description = req.body.description;
 
-    // معالجة تحميل الملفات للإصدار الجديد
-    const files = [];
+    // حدّث الملفات، فقط ملفات التعديل الجديد!
     if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        files.push({
-          fileName: file.originalname,
-          filePath: file.path.replace(/\\/g, "/"),
-          fileType: file.mimetype,
-        });
-      });
-      accomplishment.files = files;
+      accomplishment.files = req.files.map((file) => ({
+        fileName: file.originalname,
+        filePath: `/uploads/${file.filename}`,
+        fileType: file.mimetype,
+      }));
+    } else {
+      accomplishment.files = []; // إذا ما في ملفات جديدة، خليها فاضية
     }
 
-    // إعادة تعيين الحالة إلى pending
     accomplishment.status = "pending";
-
     await accomplishment.save();
 
+    // جلب النسخة بعد التعديل
     const updatedAccomplishment = await Accomplishment.findById(req.params.id)
       .populate("employee", "name email")
       .populate("comments.commentedBy", "name role");
 
-    // إعلام المديرين بالتعديل
+    // إشعار المدراء إذا يوجد socket.io
     if (io) {
       io.to("managers").emit("accomplishmentModified", {
         accomplishmentId: updatedAccomplishment._id,
@@ -379,17 +360,14 @@ exports.modifyAccomplishment = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: updatedAccomplishment,
     });
   } catch (err) {
-    console.error("Error modifying accomplishment:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-      error: err.message,
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: err.message });
   }
 };
 

@@ -18,7 +18,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LucideUpload, LucideLoader, LucideArrowLeft } from "lucide-react";
+import {
+  LucideUpload,
+  LucideLoader,
+  LucideArrowLeft,
+  LucideX,
+} from "lucide-react";
 
 const AddAccomplishment = () => {
   const { t } = useTranslation();
@@ -27,7 +32,7 @@ const AddAccomplishment = () => {
   const { user } = useAuth();
   const { sendNewAccomplishment } = useSocket();
 
-  // Prevent managers from accessing this page
+  // منع المدير من الدخول
   useEffect(() => {
     if (user?.role === "manager") {
       toast({
@@ -40,9 +45,22 @@ const AddAccomplishment = () => {
   }, [user, navigate, toast, t]);
 
   const [description, setDescription] = useState("");
-  const [files, setFiles] = useState<FileList | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // إضافة ملفات جديدة مع الحفاظ على القديمة
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...newFiles]);
+    }
+  };
+
+  // حذف ملف من القائمة
+  const handleRemoveFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,20 +76,15 @@ const AddAccomplishment = () => {
       setLoading(true);
       setError(null);
 
-      // Create form data for file upload
       const formData = new FormData();
       formData.append("description", description);
 
-      if (files) {
-        for (let i = 0; i < files.length; i++) {
-          formData.append("files", files[i]);
-        }
-      }
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
 
-      // Submit the accomplishment
       const response = await accomplishmentsAPI.createAccomplishment(formData);
 
-      // Send notification via socket
       sendNewAccomplishment({
         _id: response.data._id,
         description: response.data.description,
@@ -82,19 +95,16 @@ const AddAccomplishment = () => {
         createdAt: response.data.createdAt,
       });
 
-      // Show success message
       toast({
         title: t("common.success"),
         description:
           t("accomplishments.add") + " " + t("common.success").toLowerCase(),
       });
 
-      // Redirect back to accomplishments list
       navigate("/accomplishments");
     } catch (err) {
       console.error("Error adding accomplishment:", err);
       setError(err.message || t("common.error"));
-
       toast({
         variant: "destructive",
         title: t("common.error"),
@@ -146,22 +156,46 @@ const AddAccomplishment = () => {
 
             <div className="space-y-2">
               <Label htmlFor="files">{t("accomplishments.files")}</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="files"
-                  type="file"
-                  multiple
-                  onChange={(e) => setFiles(e.target.files)}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                />
+              <Input
+                id="files"
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+              />
+
+              {/* عرض المعاينات */}
+              <div className="mt-3 md:grid-cols-4 gap-3">
+                {files.map((file, index) => {
+                  const isImage = file.type.startsWith("image");
+                  return (
+                    <div
+                      key={index}
+                      className="relative border rounded p-2 flex justify-between items-center mb-3"
+                    >
+                      {isImage ? (
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="w-24 h-24 object-cover rounded"
+                        />
+                      ) : (
+                        <span className="text-xs text-center break-all">
+                          {file.name}
+                        </span>
+                      )}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveFile(index)}
+                      >
+                        حذف
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {files
-                  ? `${files.length} ${t(
-                      "accomplishments.files"
-                    ).toLowerCase()}`
-                  : t("accomplishments.uploadFiles")}
-              </p>
             </div>
           </CardContent>
 
