@@ -405,13 +405,12 @@ exports.exportAccomplishments = async (req, res) => {
 
     // Add headers
     worksheet.columns = [
-      { header: "Date", key: "date", width: 15 },
-      { header: "Employee Name", key: "employeeName", width: 20 },
-      { header: "Email", key: "email", width: 25 },
-      { header: "Description", key: "description", width: 50 },
-      { header: "Reviewed", key: "isReviewed", width: 10 },
-      { header: "Files Count", key: "filesCount", width: 10 },
-      { header: "Comments", key: "commentsCount", width: 10 },
+      { header: "التاريخ", key: "date", width: 15 },
+      { header: "اسم الموظف", key: "employeeName", width: 20 },
+      { header: "تفاصيل المهمة", key: "description", width: 50 },
+      { header: "تم المراجعة", key: "isReviewed", width: 10 },
+      { header: "عدد الملفات", key: "filesCount", width: 10 },
+      { header: "عدد التعليقات", key: "commentsCount", width: 10 },
     ];
 
     // Add rows

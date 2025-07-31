@@ -272,18 +272,7 @@ const AccomplishmentsList = () => {
                   </Select>
                 </div>
               )}
-
               {/* Date filters */}
-
-              <div className="space-y-1">
-                <Label htmlFor="endDate">{t("accomplishments.endDate")}</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
               <div className="space-y-1">
                 <Label htmlFor="startDate">
                   {t("accomplishments.startDate")}
@@ -293,6 +282,15 @@ const AccomplishmentsList = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>{" "}
+              <div className="space-y-1">
+                <Label htmlFor="endDate">{t("accomplishments.endDate")}</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
             </div>

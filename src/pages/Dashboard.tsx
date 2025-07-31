@@ -65,13 +65,8 @@ const Dashboard = () => {
           employeeCount = employeesResponse.count || 0;
         }
 
-        // Filter by period
-        const filtered = filterByPeriod(
-          accomplishments.filter(
-            (acc: Accomplishment) => acc.status !== "reviewed"
-          ),
-          period
-        );
+        // **هنا فقط قمنا بحذف الفلترة**
+        const filtered = filterByPeriod(accomplishments, period);
 
         setStats({
           totalEmployees: employeeCount,
@@ -80,7 +75,6 @@ const Dashboard = () => {
                 (acc: Accomplishment) => acc.status !== "reviewed"
               ).length
             : 0,
-          // لا تقطع هنا! (احفظ كل النتائج)
           recentAccomplishments: filtered,
         });
       } catch (err) {
@@ -237,7 +231,7 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">
                   {t("accomplishments.notReviewed")}
                 </p>
-                <Link to={`/accomplishments?status=notReviewed`}>
+                <Link to="/accomplishments?status=notReviewed">
                   <Button variant="outline" className="w-full mt-3">
                     {t("common.view")}
                   </Button>
