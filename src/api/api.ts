@@ -118,9 +118,9 @@ export const accomplishmentsAPI = {
   },
 
   // Add comment to accomplishment (manager only)
-  addComment: async (id: string, text: string) => {
+  addComment: async (id: string, text: string, versionIndex) => {
     try {
-      const response = await api.post(`/accomplishments/${id}/comments`, { text });
+      const response = await api.post(`/accomplishments/${id}/comments`, { text, versionIndex });
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Server error' };

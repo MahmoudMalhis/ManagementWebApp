@@ -58,6 +58,10 @@ const AccomplishmentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
       },
+      versionIndex: {
+        type: Number,
+        default: 0,
+      },
     },
   ],
   createdAt: {

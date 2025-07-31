@@ -154,26 +154,17 @@ exports.getAccomplishment = async (req, res) => {
 // @access  Private/Manager
 exports.addComment = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const { text, versionIndex } = req.body;
 
     const accomplishment = await Accomplishment.findById(req.params.id);
-
     if (!accomplishment) {
-      return res.status(404).json({
-        success: false,
-        message: "Accomplishment not found",
-      });
+      return res.status(404).json({ message: "Accomplishment not found" });
     }
 
     const comment = {
       text,
       commentedBy: req.user.id,
-      versionIndex,
+      versionIndex: versionIndex || accomplishment.previousVersions.length, // إذا لم يتم تحديده، افترض أنه التعليق على الإصدار الحالي
     };
 
     accomplishment.comments.unshift(comment);
@@ -183,12 +174,8 @@ exports.addComment = async (req, res) => {
       .populate("employee", "name email")
       .populate("comments.commentedBy", "name role");
 
-    res.json({
-      success: true,
-      data: updatedAccomplishment,
-    });
+    res.json({ success: true, data: updatedAccomplishment });
   } catch (err) {
-    console.error(err.message);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };

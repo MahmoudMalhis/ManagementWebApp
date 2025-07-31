@@ -30,7 +30,7 @@ const AccomplishmentDetails = () => {
   const [accomplishment, setAccomplishment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [commentText, setCommentText] = useState("");
+  const [commentText, setCommentText] = useState({});
 
   // ردود (Reply) للتعليقات
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -53,6 +53,7 @@ const AccomplishmentDetails = () => {
 
   useEffect(() => {
     fetchAccomplishment();
+    // console.log("Accomplishment comments:", accomplishment.comments);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -92,12 +93,20 @@ const AccomplishmentDetails = () => {
 
   const handleAddComment = async (e, versionIndex) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    const text = commentText[versionIndex] || "";
+    if (!text.trim()) return;
+    console.log("إرسال تعليق للنسخة رقم:", versionIndex, "النص:", text);
+    console.log(commentText);
+
     setSubmitting(true);
     try {
-      const response = await accomplishmentsAPI.addComment(id!, commentText);
+      const response = await accomplishmentsAPI.addComment(
+        id!,
+        text,
+        versionIndex
+      );
       setAccomplishment(response.data);
-      setCommentText("");
+      setCommentText((prev) => ({ ...prev, [versionIndex]: "" })); // امسح النص فقط للنسخة هذه
       toast({
         title: t("common.success"),
         description:
@@ -178,13 +187,14 @@ const AccomplishmentDetails = () => {
     {
       description: accomplishment.description,
       files: accomplishment.files,
-      modifiedAt: accomplishment.updatedAt || accomplishment.createdAt,
+      modifiedAt:
+        accomplishment.updatedAt &&
+        accomplishment.updatedAt !== accomplishment.createdAt
+          ? accomplishment.updatedAt
+          : accomplishment.createdAt,
       _id: "current",
     },
-  ].sort(
-    (a, b) =>
-      new Date(a.modifiedAt).getTime() - new Date(b.modifiedAt).getTime()
-  );
+  ];
 
   // جلب جميع الردود
   const allReplies = accomplishment.comments.filter((c) => c.isReply);
@@ -247,39 +257,37 @@ const AccomplishmentDetails = () => {
 
         <CardContent className="space-y-4">
           {/* جميع الإصدارات */}
-          {versions.map((version, idx) => {
-            // حساب بداية ونهاية الإصدار للفصل بين التعليقات
-            const start = new Date(version.modifiedAt);
-            const end =
-              idx < versions.length - 1
-                ? new Date(versions[idx + 1].modifiedAt)
-                : null;
-
-            // تعليقات هذا الإصدار
-            const sectionComments = accomplishment.comments
-              .filter(
-                (c) =>
-                  !c.isReply &&
-                  ((c.versionIndex !== undefined && c.versionIndex === idx) ||
-                    (c.versionIndex === undefined &&
-                      idx === versions.length - 1)) // القديمة
-              )
-              .sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              );
-
-            // الردود على تعليقات هذا الإصدار
-            const sectionReplies = allReplies;
-
+          {[...versions].reverse().map((version, idx) => {
+            const originalIdx = versions.length - 1 - idx;
             return (
               <AccomplishmentVersionBlock
                 key={version._id + version.modifiedAt}
                 version={version}
-                sectionComments={sectionComments}
-                sectionReplies={sectionReplies}
-                idx={idx}
+                sectionComments={accomplishment.comments
+                  .filter(
+                    (c) =>
+                      !c.isReply &&
+                      (c.versionIndex === originalIdx ||
+                        (originalIdx === versions.length - 1 &&
+                          c.versionIndex === undefined))
+                  )
+                  .sort(
+                    (a, b) =>
+                      new Date(a.createdAt).getTime() -
+                      new Date(b.createdAt).getTime()
+                  )}
+                sectionReplies={allReplies.filter((reply) =>
+                  accomplishment.comments
+                    .filter(
+                      (c) =>
+                        !c.isReply &&
+                        (c.versionIndex === originalIdx ||
+                          (originalIdx === versions.length - 1 &&
+                            c.versionIndex === undefined))
+                    )
+                    .some((comment) => comment._id === reply.replyTo)
+                )}
+                idx={originalIdx}
                 total={versions.length}
                 t={t}
                 replyTo={replyTo}
@@ -288,11 +296,16 @@ const AccomplishmentDetails = () => {
                 setReplyText={setReplyText}
                 submitting={submitting}
                 handleReplySubmit={handleReplySubmit}
-                canAddComment={idx === versions.length - 1 && isManager}
+                canAddComment={
+                  isManager ||
+                  (user?._id === accomplishment.employee._id &&
+                    originalIdx === versions.length - 1)
+                }
                 commentText={commentText}
                 setCommentText={setCommentText}
-                handleAddComment={(e) => handleAddComment(e, idx)}
+                handleAddComment={(e) => handleAddComment(e, originalIdx)}
                 canReply={canCurrentUserReply}
+                accomplishmentStatus={accomplishment.status}
               />
             );
           })}
