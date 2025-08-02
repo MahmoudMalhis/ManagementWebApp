@@ -196,6 +196,12 @@ const AccomplishmentDetails = () => {
     },
   ];
 
+  function getDisplayVersions(versions) {
+    if (versions.length <= 1) return versions;
+    const rest = versions.slice(1);
+    return [...rest, versions[0]]; // النسخة الأصلية في النهاية
+  }
+  const displayVersions = getDisplayVersions(versions);
   // جلب جميع الردود
   const allReplies = accomplishment.comments.filter((c) => c.isReply);
   return (
@@ -257,8 +263,8 @@ const AccomplishmentDetails = () => {
 
         <CardContent className="space-y-4">
           {/* جميع الإصدارات */}
-          {[...versions].reverse().map((version, idx) => {
-            const originalIdx = versions.length - 1 - idx;
+          {displayVersions.map((version, reversedIdx) => {
+            const originalIdx = versions.length - 1 - reversedIdx;
             return (
               <AccomplishmentVersionBlock
                 key={version._id + version.modifiedAt}

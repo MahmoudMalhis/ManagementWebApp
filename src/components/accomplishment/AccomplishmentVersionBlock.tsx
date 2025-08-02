@@ -31,16 +31,27 @@ const AccomplishmentVersionBlock = ({
     accomplishmentStatus !== "reviewed" &&
     idx === total - 1;
 
+  let dateDisplay = "";
+  if (version.modifiedAt) {
+    const d = new Date(version.modifiedAt);
+    dateDisplay = isNaN(d.getTime()) ? "" : d.toLocaleString();
+  }
+
   return (
     <div className="border rounded-md mb-8 p-4 bg-gray-50">
       <div className="mb-2 flex justify-between items-center">
         <span className="font-semibold text-base">
-          {idx === total - 1
-            ? "آخر تعديل (الحالي)"
-            : `نسخة رقم ${total - idx - 1}`}
+          {idx === total - 1 ? "آخر تعديل (الحالي)" : `نسخة رقم ${idx + 1}`}
         </span>
         <span className="text-xs text-muted-foreground">
-          {new Date(version.modifiedAt).toLocaleString()}
+          {(() => {
+            const date = new Date(version.modifiedAt);
+            const day = date.getDate().toString().padStart(2, "0");
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+            const year = date.getFullYear();
+            const time = date.toLocaleTimeString();
+            return `${day}/${month}/${year}, ${time}`;
+          })()}
         </span>
       </div>
       <div className="mb-3 p-3 rounded bg-white">
@@ -77,12 +88,32 @@ const AccomplishmentVersionBlock = ({
             className="w-full p-2 border rounded"
             placeholder={t("accomplishments.addComment")}
           />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-            disabled={submitting}
-          >
-            {submitting ? t("common.loading") : t("accomplishments.addComment")}
+          <button type="submit" disabled={submitting}>
+            <svg
+              viewBox="-2.4 -2.4 28.80 28.80"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              stroke="#"
+              className="w-8"
+            >
+              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+              <g
+                id="SVGRepo_tracerCarrier"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                stroke="#CCCCCC"
+                strokeWidth="0.384"
+              ></g>
+              <g id="SVGRepo_iconCarrier">
+                <path
+                  d="M10.3009 13.6949L20.102 3.89742M10.5795 14.1355L12.8019 18.5804C13.339 19.6545 13.6075 20.1916 13.9458 20.3356C14.2394 20.4606 14.575 20.4379 14.8492 20.2747C15.1651 20.0866 15.3591 19.5183 15.7472 18.3818L19.9463 6.08434C20.2845 5.09409 20.4535 4.59896 20.3378 4.27142C20.2371 3.98648 20.013 3.76234 19.7281 3.66167C19.4005 3.54595 18.9054 3.71502 17.9151 4.05315L5.61763 8.2523C4.48114 8.64037 3.91289 8.83441 3.72478 9.15032C3.56153 9.42447 3.53891 9.76007 3.66389 10.0536C3.80791 10.3919 4.34498 10.6605 5.41912 11.1975L9.86397 13.42C10.041 13.5085 10.1295 13.5527 10.2061 13.6118C10.2742 13.6643 10.3352 13.7253 10.3876 13.7933C10.4468 13.87 10.491 13.9585 10.5795 14.1355Z"
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                ></path>
+              </g>
+            </svg>
           </button>
         </form>
       )}

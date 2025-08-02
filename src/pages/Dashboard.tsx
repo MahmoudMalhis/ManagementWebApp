@@ -47,7 +47,9 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [period, setPeriod] = useState<"day" | "week" | "month">("day");
+  const [period, setPeriod] = useState<"day" | "week" | "month" | "last30">(
+    "day"
+  );
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -93,7 +95,7 @@ const Dashboard = () => {
 
   function filterByPeriod(
     accomplishments: Accomplishment[],
-    period: "day" | "week" | "month"
+    period: "day" | "week" | "month" | "last30"
   ) {
     const now = new Date();
     return accomplishments.filter((acc) => {
@@ -114,6 +116,13 @@ const Dashboard = () => {
           accDate.getMonth() === now.getMonth()
         );
       }
+      if (period === "last30") {
+        const days30Ago = new Date(now);
+        days30Ago.setDate(now.getDate() - 29);
+        days30Ago.setHours(0, 0, 0, 0);
+        return accDate >= days30Ago && accDate <= now;
+      }
+
       return true;
     });
   }
@@ -194,11 +203,18 @@ const Dashboard = () => {
               7
             </Button>
             <Button
+              onClick={() => setPeriod("last30")}
+              className="ml-3"
+              variant={period === "last30" ? "default" : "outline"}
+            >
+              30
+            </Button>
+            <Button
               onClick={() => setPeriod("month")}
               className="ml-3"
               variant={period === "month" ? "default" : "outline"}
             >
-              30
+              الشهر الحالي
             </Button>
 
             <div className="text-2xl font-bold">
