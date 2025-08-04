@@ -273,7 +273,7 @@ exports.reviewAccomplishment = async (req, res) => {
     }
 
     accomplishment.status = status;
-    accomplishment.isReviewed = status === "reviewed"; // <--- الحل هنا
+    accomplishment.isReviewed = status === "reviewed";
 
     // Add a comment if provided
     if (comment && comment.trim() !== "") {
@@ -313,7 +313,7 @@ exports.modifyAccomplishment = async (req, res) => {
     accomplishment.previousVersions.push({
       description: accomplishment.description,
       files: accomplishment.files,
-      modifiedAt: Date.now(),
+      modifiedAt: accomplishment.updatedAt || accomplishment.createdAt,
     });
 
     // حدّث الوصف

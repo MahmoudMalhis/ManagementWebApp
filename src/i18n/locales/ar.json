@@ -35,8 +35,9 @@
     "uploadFiles": "تحميل الملفات",
     "submit": "إرسال",
     "review": "تم",
-    "reviewed": "تمت المراجعة",
-    "notReviewed": "لم تتم المراجعة",
+    "reviewed": "جاهز",
+    "notReviewed": "معلق",
+    "needsModification": "تعديل",
     "addComment": "إضافة تعليق",
     "comment": "تعليق",
     "comments": "التعليقات",
@@ -50,7 +51,6 @@
     "applyFilter": "تطبيق التصفية",
     "clearFilter": "مسح التصفية",
     "export": "تصدير إلى إكسل",
-    "needsModification": "يحتاج إلى تعديل",
     "reply": "رد"
   },
   "employees": {

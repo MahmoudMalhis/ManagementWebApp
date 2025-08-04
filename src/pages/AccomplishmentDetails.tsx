@@ -59,7 +59,6 @@ const AccomplishmentDetails = () => {
 
   useEffect(() => {
     fetchAccomplishment();
-    // console.log("Accomplishment comments:", accomplishment.comments);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -236,9 +235,15 @@ const AccomplishmentDetails = () => {
     const rest = versions.slice(1);
     return [...rest, versions[0]]; // النسخة الأصلية في النهاية
   }
-  const displayVersions = getDisplayVersions(versions);
+  const displayVersions = [...versions].reverse();
   // جلب جميع الردود
   const allReplies = accomplishment.comments.filter((c) => c.isReply);
+  function getLastModifiedDate(acc) {
+    if (acc.previousVersions && acc.previousVersions.length > 0) {
+      return acc.previousVersions[acc.previousVersions.length - 1].modifiedAt;
+    }
+    return acc.createdAt;
+  }
   return (
     <div className="max-w-3xl mx-auto">
       <Button
@@ -260,7 +265,9 @@ const AccomplishmentDetails = () => {
                   </div>
                 )}
                 <span className="text-muted-foreground text-sm">
-                  {new Date(accomplishment.createdAt).toLocaleString()}
+                  {new Date(
+                    getLastModifiedDate(accomplishment)
+                  ).toLocaleString()}
                 </span>
               </CardTitle>
             </div>
@@ -298,8 +305,8 @@ const AccomplishmentDetails = () => {
 
         <CardContent className="space-y-4">
           {/* جميع الإصدارات */}
-          {displayVersions.map((version, reversedIdx) => {
-            const originalIdx = versions.length - 1 - reversedIdx;
+          {displayVersions.map((version, idx) => {
+            const originalIdx = versions.length - 1 - idx;
             return (
               <AccomplishmentVersionBlock
                 key={version._id + version.modifiedAt}
@@ -328,8 +335,8 @@ const AccomplishmentDetails = () => {
                     )
                     .some((comment) => comment._id === reply.replyTo)
                 )}
-                idx={originalIdx}
-                total={versions.length}
+                idx={idx}
+                total={displayVersions.length}
                 t={t}
                 replyTo={replyTo}
                 setReplyTo={setReplyTo}
@@ -344,7 +351,7 @@ const AccomplishmentDetails = () => {
                 }
                 commentText={commentText}
                 setCommentText={setCommentText}
-                handleAddComment={(e) => handleAddComment(e, originalIdx)}
+                handleAddComment={(e) => handleAddComment(e, idx)}
                 canReply={canCurrentUserReply}
                 accomplishmentStatus={accomplishment.status}
               />

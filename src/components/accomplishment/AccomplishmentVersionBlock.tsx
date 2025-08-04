@@ -29,7 +29,7 @@ const AccomplishmentVersionBlock = ({
     isManager &&
     canAddComment &&
     accomplishmentStatus !== "reviewed" &&
-    idx === total - 1;
+    idx === 0;
 
   let dateDisplay = "";
   if (version.modifiedAt) {
@@ -41,7 +41,7 @@ const AccomplishmentVersionBlock = ({
     <div className="glass-card border-none mb-8 p-4">
       <div className="mb-2 flex justify-between items-center">
         <span className="font-semibold text-base glassy-text">
-          {idx === total - 1 ? "آخر تعديل (الحالي)" : `نسخة رقم ${idx + 1}`}
+          {idx === 0 ? "آخر تعديل (الحالي)" : `نسخة رقم ${total - idx}`}
         </span>
         <span className="text-xs text-muted-foreground glassy-text">
           {(() => {

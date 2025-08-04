@@ -15,7 +15,7 @@ const AccomplishmentCommentsSection = ({
   idx,
   total,
 }) => {
-  const allowReply = accomplishmentStatus !== "reviewed" && idx === total - 1;
+  const allowReply = accomplishmentStatus !== "reviewed" && idx === 0;
 
   return (
     <div className="mt-2">

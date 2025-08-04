@@ -213,7 +213,7 @@ const AccomplishmentsList = () => {
 
       {/* Filters */}
       {showFilters && (
-        <Card className="glass-card border-none">
+        <Card className="glass-card glass-card-hover border-none">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-base glassy-text">
@@ -304,86 +304,106 @@ const AccomplishmentsList = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="flex flex-wrap justify-center gap-3 mx-auto">
           {accomplishmentsToDisplay.length > 0 ? (
             accomplishmentsToDisplay.map((accomplishment) => (
-              <Card key={accomplishment._id} className="glass-card border-none">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg glassy-text">
-                        {isManager && (
-                          <span className="font-medium">
-                            {accomplishment.employee.name} -{" "}
-                          </span>
-                        )}
-                        <span className="text-muted-foreground text-sm">
-                          {new Date(
-                            accomplishment.createdAt
-                          ).toLocaleDateString()}
-                        </span>
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {accomplishment.description.length > 100
-                          ? `${accomplishment.description.substring(0, 100)}...`
-                          : accomplishment.description}
-                      </CardDescription>
-                    </div>
-                    <div
-                      className={`px-2 py-1 rounded text-xs self-start
+              <Card
+                key={accomplishment._id}
+                className="glass-card glass-card-hover border-none md:w-[32%] w-[48%]"
+              >
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-lg glassy-text flex justify-between">
+                    <span className="text-muted-foreground text-base">
+                      {new Date(accomplishment.createdAt).toLocaleDateString()}
+                    </span>
+                    {isManager && (
+                      <span className="capitalize font-bold">
+                        {accomplishment.employee.name}
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <Link to={`/accomplishments/${accomplishment._id}`}>
+                  <CardDescription className="p-3 border-y border-[#aac8f0] h-20 bg-[#d5e2f9]">
+                    {accomplishment.description.length > 100
+                      ? `${accomplishment.description.substring(0, 100)}...`
+                      : accomplishment.description}
+                  </CardDescription>
+                  <div
+                    className={`font-[calibri] font-bold px-2 py-1 self-start rounded-b-xl mx-auto
                         ${
                           accomplishment.status === "reviewed"
                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                             : accomplishment.status === "needs_modification"
-                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                        }`}
-                    >
-                      {accomplishment.status === "reviewed" ? (
-                        <span className="flex items-center gap-1">
-                          <LucideFileCheck className="h-3 w-3" />
-                          {t("accomplishments.reviewed")}
-                        </span>
-                      ) : accomplishment.status === "needs_modification" ? (
-                        <span className="flex items-center gap-1">
-                          <LucideFileClock className="h-3 w-3" />
-                          {t("accomplishments.needsModification")}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          <LucideFileClock className="h-3 w-3" />
-                          {t("accomplishments.notReviewed")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="py-1">
-                  <div className="flex flex-wrap gap-1 my-1">
-                    {accomplishment.files &&
-                      accomplishment.files.length > 0 && (
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <LucideFileText className="h-3 w-3 mr-1" />
-                          {accomplishment.files.length}{" "}
-                          {t("accomplishments.files").toLowerCase()}
+                            ? "bg-red-100 text-red-800"
+                            : "bg-amber-100 text-amber-800"
+                        }
+                        `}
+                  >
+                    <CardContent className="p-1">
+                      <div className="flex justify-between md:flex-row flex-col items-center">
+                        {accomplishment.files && (
+                          <div
+                            className={`flex items-center text-md ${
+                              accomplishment.files.length > 0
+                                ? "text-muted-foreground"
+                                : "text-gray-300"
+                            }`}
+                          >
+                            <LucideFileText className="h-3 w-3 mr-1" />
+                            {accomplishment.files.length}
+                            {t("accomplishments.files").toLowerCase()}
+                          </div>
+                        )}
+                        {accomplishment.comments && (
+                          <div
+                            className={`flex items-center text-md  ${
+                              accomplishment.comments.length > 0
+                                ? "text-muted-foreground"
+                                : "text-gray-300"
+                            }`}
+                          >
+                            {accomplishment.comments.length}
+                            {t("accomplishments.comments").toLowerCase()}
+                          </div>
+                        )}
+                        <div className="flex flex-col justify-center items-center gap-3">
+                          <div
+                            className={`px-2 self-start rounded-xl
+                        ${
+                          accomplishment.status === "reviewed"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : accomplishment.status === "needs_modification"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-amber-100 text-amber-800"
+                        }
+                        `}
+                          >
+                            {accomplishment.status === "reviewed" ? (
+                              <span className="flex items-center gap-1">
+                                {t("accomplishments.reviewed")}
+                              </span>
+                            ) : accomplishment.status ===
+                              "needs_modification" ? (
+                              <span className="flex items-center gap-1">
+                                {t("accomplishments.needsModification")}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                {t("accomplishments.notReviewed")}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    {accomplishment.comments &&
-                      accomplishment.comments.length > 0 && (
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          {accomplishment.comments.length}{" "}
-                          {t("accomplishments.comments").toLowerCase()}
-                        </div>
-                      )}
+                      </div>
+                    </CardContent>
                   </div>
-                </CardContent>
-                <CardFooter className="pt-0">
-                  <Link to={`/accomplishments/${accomplishment._id}`}>
-                    <Button className="glass-btn" size="sm">
-                      {t("common.view")}
-                    </Button>
-                  </Link>
-                </CardFooter>
+                </Link>
+                {/* <CardFooter className="pt-0">
+                      
+                        <Button>{t("common.view")}</Button>
+                      </Link>
+                    </CardFooter> */}
               </Card>
             ))
           ) : (

@@ -1,73 +1,72 @@
 const mongoose = require("mongoose");
 
-const AccomplishmentSchema = new mongoose.Schema({
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  files: [
-    {
-      fileName: String,
-      filePath: String,
-      fileType: String,
+const AccomplishmentSchema = new mongoose.Schema(
+  {
+    employee: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-  ],
-  status: {
-    type: String,
-    enum: ["pending", "reviewed", "needs_modification"],
-    default: "pending",
-  },
-  previousVersions: [
-    {
-      description: String,
-      files: [
-        {
-          fileName: String,
-          filePath: String,
-          fileType: String,
+    description: {
+      type: String,
+      required: true,
+    },
+    files: [
+      {
+        fileName: String,
+        filePath: String,
+        fileType: String,
+      },
+    ],
+    status: {
+      type: String,
+      enum: ["pending", "reviewed", "needs_modification"],
+      default: "pending",
+    },
+    previousVersions: [
+      {
+        description: String,
+        files: [
+          {
+            fileName: String,
+            filePath: String,
+            fileType: String,
+          },
+        ],
+        modifiedAt: {
+          type: Date,
+          default: Date.now,
         },
-      ],
-      modifiedAt: {
-        type: Date,
-        default: Date.now,
       },
-    },
-  ],
-  comments: [
-    {
-      text: String,
-      commentedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+    ],
+    comments: [
+      {
+        text: String,
+        commentedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        isReply: {
+          type: Boolean,
+          default: false,
+        },
+        replyTo: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Comment",
+          default: null,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+        versionIndex: {
+          type: Number,
+          default: 0,
+        },
       },
-      isReply: {
-        type: Boolean,
-        default: false,
-      },
-      replyTo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
-        default: null,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-      versionIndex: {
-        type: Number,
-        default: 0,
-      },
-    },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
+    ],
   },
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Accomplishment", AccomplishmentSchema);

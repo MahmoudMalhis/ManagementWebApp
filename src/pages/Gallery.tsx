@@ -129,7 +129,12 @@ export default function GalleryPage() {
       {showSwiper && (
         <div
           className="fixed inset-0 flex items-center justify-center z-[1000] bg-black/60"
-          style={{ backdropFilter: "blur(2px)" }}
+          style={
+            {
+              backdropFilter: "blur(2px)",
+              "--swiper-navigation-color": "#6386bf",
+            } as React.CSSProperties
+          }
         >
           <div className="relative w-full max-w-3xl glass-modal">
             <button
