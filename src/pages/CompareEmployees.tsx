@@ -98,7 +98,6 @@ const CompareEmployees = () => {
       setError(null);
 
       try {
-        // Initialize employee data array
         const newEmployeesData: EmployeeData[] = selectedIds.map((_id) => ({
           employee: {
             _id,
@@ -110,17 +109,14 @@ const CompareEmployees = () => {
 
         setEmployeesData(newEmployeesData);
 
-        // Fetch data for each employee
         const promises = selectedIds.map(async (id, index) => {
           try {
-            // Find employee details from all employees list
             const employeeDetails = allEmployees.find((emp) => emp._id === id);
 
             if (!employeeDetails) {
               throw new Error(`Employee with ID ${id} not found`);
             }
 
-            // Fetch accomplishments for this employee
             const accomplishmentsResponse =
               await accomplishmentsAPI.getAccomplishments({
                 employee: id,
@@ -144,7 +140,6 @@ const CompareEmployees = () => {
 
         const results = await Promise.all(promises);
 
-        // Update the employee data with the fetched results
         const updatedEmployeesData = [...newEmployeesData];
         results.forEach((result) => {
           updatedEmployeesData[result.index] = {
@@ -163,7 +158,6 @@ const CompareEmployees = () => {
       }
     };
 
-    // Only fetch if we have both employees list and selected IDs
     if (allEmployees.length > 0 && selectedIds.length > 0) {
       fetchEmployeeData();
     }
@@ -175,7 +169,6 @@ const CompareEmployees = () => {
       const newSelectedIds = [...selectedIds, id];
       setSelectedIds(newSelectedIds);
 
-      // Update URL params
       const searchParams = new URLSearchParams();
       searchParams.set("ids", newSelectedIds.join(","));
       navigate(`/employees/compare?${searchParams.toString()}`);
@@ -189,7 +182,6 @@ const CompareEmployees = () => {
     );
     setSelectedIds(newSelectedIds);
 
-    // Update URL params
     if (newSelectedIds.length > 0) {
       const searchParams = new URLSearchParams();
       searchParams.set("ids", newSelectedIds.join(","));
@@ -204,33 +196,11 @@ const CompareEmployees = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Group accomplishments by date
-  const groupAccomplishmentsByDate = (accomplishments: Accomplishment[]) => {
-    const grouped: Record<string, Accomplishment[]> = {};
-
-    accomplishments.forEach((accomplishment) => {
-      const date = formatDate(accomplishment.createdAt);
-
-      if (!grouped[date]) {
-        grouped[date] = [];
-      }
-
-      grouped[date].push(accomplishment);
-    });
-
-    // Convert to array and sort by date (latest first)
-    return Object.entries(grouped).sort((a, b) => {
-      const dateA = new Date(a[0]).getTime();
-      const dateB = new Date(b[0]).getTime();
-      return dateB - dateA;
-    });
-  };
-
   return (
     <div>
       <Button
         variant="ghost"
-        className="mb-4 flex items-center gap-1"
+        className="mb-4 flex items-center gap-1 glass-btn"
         onClick={() => navigate("/employees")}
       >
         <LucideArrowLeft className="h-4 w-4" />
@@ -238,7 +208,7 @@ const CompareEmployees = () => {
       </Button>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight glassy-text">
           {t("employees.compare")}
         </h1>
         <p className="text-muted-foreground mt-1">{t("employees.select")}</p>
@@ -246,11 +216,13 @@ const CompareEmployees = () => {
 
       {/* Add employee selector */}
       {allEmployees.length > 0 && selectedIds.length < 4 && (
-        <Card className="mb-6">
+        <Card className="mb-6 glass-card border-none">
           <CardContent className="py-6">
             <div className="flex items-end gap-4">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="add-employee">{t("employees.select")}</Label>
+                <Label htmlFor="add-employee" className="glassy-text">
+                  {t("employees.select")}
+                </Label>
                 <Select
                   onValueChange={(value) => {
                     handleAddEmployee(value);
@@ -263,10 +235,10 @@ const CompareEmployees = () => {
                     }
                   }}
                 >
-                  <SelectTrigger id="add-employee">
+                  <SelectTrigger id="add-employee" className="glass-input">
                     <SelectValue placeholder={t("employees.select")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="glass-dropdown">
                     {allEmployees
                       .filter((employee) => !selectedIds.includes(employee._id))
                       .map((employee) => (
@@ -278,7 +250,11 @@ const CompareEmployees = () => {
                 </Select>
               </div>
 
-              <Button variant="outline" onClick={() => navigate("/employees")}>
+              <Button
+                variant="outline"
+                className="glass-btn"
+                onClick={() => navigate("/employees")}
+              >
                 {t("common.cancel")}
               </Button>
             </div>
@@ -295,7 +271,7 @@ const CompareEmployees = () => {
 
       {/* Error state */}
       {error && (
-        <Card className="bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900">
+        <Card className="glass-card border border-red-200">
           <CardContent className="flex items-center gap-2 py-6">
             <span className="text-red-600 dark:text-red-400">{error}</span>
           </CardContent>
@@ -308,24 +284,24 @@ const CompareEmployees = () => {
           {/* Employee headers */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {employeesData.map((data) => (
-              <Card key={data.employee._id} className="relative">
+              <Card
+                key={data.employee._id}
+                className="relative glass-card border-none"
+              >
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-2 right-2 h-8 w-8"
+                  className="absolute top-2 right-2 h-8 w-8 glass-btn"
                   onClick={() => handleRemoveEmployee(data.employee._id)}
                 >
                   ×
                 </Button>
                 <CardHeader>
-                  <CardTitle className="text-xl">
+                  <CardTitle className="text-xl glassy-text">
                     {data.employee.name}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {777}
-                  </p>
+                  {/* يمكنك وضع أي إحصائيات أخرى هنا */}
                 </CardHeader>
-
                 <CardContent>
                   {data.loading ? (
                     <div className="flex justify-center p-4">
@@ -360,22 +336,17 @@ const CompareEmployees = () => {
 
           {/* Accomplishments comparison by date */}
           <div className="space-y-8">
-            {/* Create a combined timeline of all dates */}
             {employeesData.length > 0 &&
               !employeesData.some((data) => data.loading) && (
                 <>
                   {/* Get all unique dates from all employees */}
                   {(() => {
-                    // Create a set of all dates from all employees
                     const allDates = new Set<string>();
-
                     employeesData.forEach((data) => {
                       data.accomplishments.forEach((acc) => {
                         allDates.add(formatDate(acc.createdAt));
                       });
                     });
-
-                    // Convert to array and sort (latest first)
                     return Array.from(allDates)
                       .sort(
                         (a, b) => new Date(b).getTime() - new Date(a).getTime()
@@ -383,19 +354,16 @@ const CompareEmployees = () => {
                       .map((date) => (
                         <div key={date} className="mb-8">
                           {/* Date header */}
-                          <div className="bg-muted/40 p-3 rounded-md mb-4">
-                            <h3 className="font-medium">{date}</h3>
+                          <div className="bg-white/40 dark:bg-slate-900/30 p-3 rounded-md mb-4 shadow glassy-text font-semibold">
+                            <h3>{date}</h3>
                           </div>
-
                           {/* Grid layout for employees */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {employeesData.map((empData, index) => {
-                              // Find accomplishments for this employee on this date
                               const empAccomplishmentsForDate =
                                 empData.accomplishments.filter(
                                   (acc) => formatDate(acc.createdAt) === date
                                 );
-
                               return (
                                 <div key={index} className="space-y-4">
                                   {empAccomplishmentsForDate.length > 0 ? (
@@ -407,7 +375,10 @@ const CompareEmployees = () => {
                                           ? "reviewed"
                                           : "pending";
                                       return (
-                                        <Card key={acc._id}>
+                                        <Card
+                                          key={acc._id}
+                                          className="glass-card border-none"
+                                        >
                                           <CardContent className="py-4">
                                             <div className="space-y-2">
                                               <div className="flex justify-between items-center">

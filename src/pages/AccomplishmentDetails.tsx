@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ModifyForm from "@/components/ModifyForm";
 import AccomplishmentVersionBlock from "@/components/accomplishment/AccomplishmentVersionBlock";
+import api from "@/api/api";
 
 const AccomplishmentDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,11 @@ const AccomplishmentDetails = () => {
   const [replyText, setReplyText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const [showGalleryPopup, setShowGalleryPopup] = useState(false);
+  const [galleryFolders, setGalleryFolders] = useState<any[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
+  const [folderName, setFolderName] = useState("__NEW__");
+  const [newFolderName, setNewFolderName] = useState("");
 
   const fetchAccomplishment = async () => {
     try {
@@ -78,6 +84,35 @@ const AccomplishmentDetails = () => {
     } finally {
       setReviewing(false);
     }
+  };
+  const allFiles = accomplishment
+    ? [
+        ...(accomplishment?.files || []),
+        ...(accomplishment.previousVersions || []).flatMap(
+          (v) => v.files || []
+        ),
+      ]
+    : [];
+
+  // عند الضغط على تم للمراجعة، افتح الـ popup
+  const openGalleryPopup = async () => {
+    if (!allFiles || allFiles.length === 0) {
+      await handleReviewAccomplishment("reviewed");
+      return;
+    }
+    const res = await api.get("/gallery/folders");
+    setGalleryFolders(res.data.folders);
+    setShowGalleryPopup(true);
+  };
+
+  const handleSaveToGallery = async () => {
+    await api.post("/gallery/add-files", {
+      files: selectedFiles,
+      folderName: folderName === "__NEW__" ? newFolderName : folderName,
+    });
+    setShowGalleryPopup(false);
+    handleReviewAccomplishment("reviewed");
+    alert("تمت الإضافة للمعرض!");
   };
 
   const canCurrentUserReply = (comment) => {
@@ -208,17 +243,17 @@ const AccomplishmentDetails = () => {
     <div className="max-w-3xl mx-auto">
       <Button
         variant="ghost"
-        className="mb-4 flex items-center gap-1"
+        className="mb-4 flex items-center gap-1 glass-btn"
         onClick={() => navigate("/accomplishments")}
       >
         <LucideArrowLeft className="h-4 w-4" />
         {t("common.back")}
       </Button>
-      <Card>
+      <Card className="glass-card border-none">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-xl">
+              <CardTitle className="text-xl glassy-text">
                 {isManager && (
                   <div className="mb-1 font-medium">
                     {accomplishment.employee.name}
@@ -235,10 +270,10 @@ const AccomplishmentDetails = () => {
               }
               className={
                 accomplishment.status === "reviewed"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  ? "glass-badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                   : accomplishment.status === "needs_modification"
-                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                  : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                  ? "glass-badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  : "glass-badge bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
               }
             >
               {accomplishment.status === "reviewed" ? (
@@ -320,9 +355,9 @@ const AccomplishmentDetails = () => {
           {isManager && accomplishment.status !== "reviewed" && (
             <div className="flex justify-end gap-2">
               <Button
-                onClick={() => handleReviewAccomplishment("reviewed")}
+                onClick={openGalleryPopup}
                 disabled={reviewing}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 glass-btn"
               >
                 {reviewing ? (
                   <LucideLoader className="h-4 w-4 animate-spin" />
@@ -335,7 +370,7 @@ const AccomplishmentDetails = () => {
                 onClick={() => handleReviewAccomplishment("needs_modification")}
                 variant="outline"
                 disabled={reviewing}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 glass-btn"
               >
                 {reviewing ? (
                   <LucideLoader className="h-4 w-4 animate-spin" />
@@ -358,6 +393,97 @@ const AccomplishmentDetails = () => {
             )}
         </CardContent>
       </Card>
+      <>
+        {showGalleryPopup && accomplishment && (
+          <div
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+            style={{ backdropFilter: "blur(2px)" }}
+          >
+            <div className="glass-popup rounded-2xl p-6 min-w-[320px] max-w-md shadow-xl border border-white/30 backdrop-blur-xl">
+              <h2 className="mb-4 font-bold glassy-text">
+                اختر الملفات للمعرض
+              </h2>
+              <div className="max-h-96 overflow-auto">
+                {(allFiles || []).map((file, i) => (
+                  <div key={i} className="flex mt-3">
+                    <input
+                      type="checkbox"
+                      checked={
+                        !!file.filePath &&
+                        selectedFiles.some((f) => f.filePath === file.filePath)
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked)
+                          setSelectedFiles([
+                            ...selectedFiles,
+                            {
+                              ...file,
+                              fromAccomplishment: accomplishment._id,
+                            },
+                          ]);
+                        else
+                          setSelectedFiles(
+                            selectedFiles.filter(
+                              (f) => f.filePath !== file.filePath
+                            )
+                          );
+                      }}
+                    />
+                    <img
+                      src={file.filePath}
+                      alt=""
+                      className="w-28 mr-3 rounded-xl shadow border border-white/30"
+                      style={{
+                        background: "rgba(255,255,255,0.18)",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <label className="block mb-1 glassy-text">اختر مجلد:</label>
+                <select
+                  value={folderName}
+                  onChange={(e) => setFolderName(e.target.value)}
+                  className="glass-input border p-1 w-full"
+                >
+                  <option value="__NEW__">-- مجلد جديد --</option>
+                  {(galleryFolders || []).map((f) => (
+                    <option key={f._id} value={f.name}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                {folderName === "__NEW__" && (
+                  <input
+                    type="text"
+                    className="mt-2 glass-input border p-1 w-full"
+                    placeholder="اسم المجلد الجديد"
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                  />
+                )}
+              </div>
+              <div className="mt-4 flex gap-2 justify-end">
+                <Button
+                  onClick={() => setShowGalleryPopup(false)}
+                  variant="outline"
+                  className="glass-btn"
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  onClick={handleSaveToGallery}
+                  disabled={selectedFiles.length === 0 || !folderName}
+                  className="glass-btn"
+                >
+                  تم
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     </div>
   );
 };

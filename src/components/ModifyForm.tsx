@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { accomplishmentsAPI } from "@/api/api";
-import { Label } from "@/components/ui/label";
-import { Input } from "./ui/input";
 
 interface FileData {
   _id?: string; // موجود للملفات القديمة من قاعدة البيانات
@@ -89,20 +87,21 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 mt-6 border p-4 rounded-md"
+      className="space-y-5 mt-6 glass-card p-6 border-none"
     >
       <Textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         rows={3}
         placeholder="أدخل الوصف الجديد"
+        className="glass-input"
       />
 
-      <div className="mt-3 md:grid-cols-4 gap-3">
+      <div className="mt-3 grid md:grid-cols-4 gap-3">
         {files.map((file, index) => {
           const isImage =
             file.fileType?.startsWith("image") ||
-            file.file?.type.startsWith("image");
+            file.file?.type?.startsWith("image");
 
           const src = file.file // ملف جديد
             ? URL.createObjectURL(file.file)
@@ -113,16 +112,17 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
           return (
             <div
               key={index}
-              className="relative border rounded p-2 flex justify-between items-center"
+              className="relative glass-card p-2 flex flex-col items-center gap-2 border-none"
+              style={{ minHeight: "120px", minWidth: "110px" }}
             >
               {isImage ? (
                 <img
                   src={src}
                   alt={file.fileName}
-                  className="w-24 h-24 object-cover rounded"
+                  className="w-24 h-24 object-cover rounded-xl glass-img"
                 />
               ) : (
-                <span className="text-xs text-center break-all">
+                <span className="text-xs text-center break-all glassy-text mt-4">
                   {file.fileName}
                 </span>
               )}
@@ -131,7 +131,7 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
                 variant="destructive"
                 size="sm"
                 onClick={() => handleRemoveFile(index)}
-                className="mt-2"
+                className="glass-btn"
               >
                 حذف
               </Button>
@@ -145,10 +145,10 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
         type="file"
         multiple
         onChange={handleFileChange}
-        className="block w-full"
+        className="block w-full glass-input mt-3"
       />
 
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} className="glass-btn w-full">
         {loading ? "جاري التعديل..." : "حفظ التعديلات"}
       </Button>
     </form>

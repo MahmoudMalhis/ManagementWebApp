@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { LucideMenu, LucideUser } from 'lucide-react';
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { LucideMenu, LucideUser } from "lucide-react";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -13,20 +13,20 @@ const Header = ({ onMenuClick }: HeaderProps) => {
 
   // Toggle language function
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'ar' ? 'en' : 'ar';
+    const newLang = i18n.language === "ar" ? "en" : "ar";
     i18n.changeLanguage(newLang);
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
-    document.body.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
+    document.body.dir = newLang === "ar" ? "rtl" : "ltr";
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 py-4 px-6 flex items-center justify-between">
+    <header className="glass-header py-4 px-6 flex items-center justify-between shadow-md">
       {/* Left side - Menu button for mobile */}
       <div>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="icon"
-          className="lg:hidden"
+          className="glass-btn lg:hidden"
           onClick={onMenuClick}
         >
           <LucideMenu className="h-5 w-5" />
@@ -36,22 +36,22 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       {/* Right side - User info and language toggle */}
       <div className="flex items-center gap-4">
         {/* Language toggle */}
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={toggleLanguage}
-          className="text-sm"
+          className="glass-btn text-sm"
         >
-          {i18n.language === 'ar' ? 'English' : 'العربية'}
+          {i18n.language === "ar" ? "English" : "العربية"}
         </Button>
 
         {/* User info on larger screens */}
         <div className="hidden md:flex items-center gap-2">
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium text-[#395275] glassy-text">
             {user?.name}
           </span>
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-            <LucideUser className="h-4 w-4" />
+          <div className="glass-avatar h-8 w-8 rounded-full flex items-center justify-center">
+            <LucideUser className="h-4 w-4 text-[#395275]" />
           </div>
         </div>
       </div>

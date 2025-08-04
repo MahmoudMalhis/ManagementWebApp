@@ -16,7 +16,8 @@
     "accomplishments": "Accomplishments",
     "employees": "Employees",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "gallery": "gallery"
   },
   "dashboard": {
     "welcome": "Welcome",
@@ -50,7 +51,7 @@
     "clearFilter": "Clear Filter",
     "export": "Export to Excel",
     "needsModification": "Needs modification",
-    "reply":"reply"
+    "reply": "reply"
   },
   "employees": {
     "title": "Employees",

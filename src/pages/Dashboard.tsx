@@ -144,9 +144,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen p-5 bg-gradient-to-br from-[#daeaff] via-[#f5f8fa] to-[#c9e4ff]">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight glassy-text">
           {t("dashboard.welcome")}, {user?.name}!
         </h1>
         <p className="text-muted-foreground">
@@ -161,16 +161,16 @@ const Dashboard = () => {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {!isManager && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+          <Card className="glass-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 glassy-text">
+              <CardTitle className="text-sm font-medium ">
                 {t("accomplishments.add")}
               </CardTitle>
               <LucideClipboard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <Link to="/accomplishments/add">
-                <Button className="w-full mt-2">
+                <Button className="glass-btn px-5 py-2 rounded-xl font-bold text-[#42689c]">
                   {t("accomplishments.add")}
                 </Button>
               </Link>
@@ -179,52 +179,60 @@ const Dashboard = () => {
         )}
 
         {/* Recent Accomplishments Card */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium glassy-text">
               {t("accomplishments.title")}
             </CardTitle>
 
-            <LucideCheckSquare className="h-4 w-4 text-muted-foreground" />
+            <LucideCheckSquare className="h-4 w-4 text-muted-foreground " />
           </CardHeader>
           <CardContent>
             <Button
               onClick={() => setPeriod("day")}
-              className="ml-3"
+              className={`ml-3 glass-btn glass-nav-link ${
+                period === "day" ? "glass-nav-link-active" : ""
+              }`}
               variant={period === "day" ? "default" : "outline"}
             >
               1
             </Button>
             <Button
               onClick={() => setPeriod("week")}
-              className="ml-3"
+              className={`ml-3 glass-btn glass-nav-link ${
+                period === "week" ? "glass-nav-link-active" : ""
+              }`}
               variant={period === "week" ? "default" : "outline"}
             >
               7
             </Button>
             <Button
               onClick={() => setPeriod("last30")}
-              className="ml-3"
+              className={`ml-3 glass-btn glass-nav-link ${
+                period === "last30" ? "glass-nav-link-active" : ""
+              }`}
               variant={period === "last30" ? "default" : "outline"}
             >
               30
             </Button>
             <Button
               onClick={() => setPeriod("month")}
-              className="ml-3"
+              className={`ml-3 glass-btn glass-nav-link ${
+                period === "month" ? "glass-nav-link-active" : ""
+              }`}
               variant={period === "month" ? "default" : "outline"}
             >
               الشهر الحالي
             </Button>
 
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold glassy-text">
               {stats.recentAccomplishments.length}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground glassy-text">
               {t("dashboard.recentAccomplishments")}
             </p>
             <Link to={`/accomplishments?period=${period}`}>
-              <Button variant="outline" className="w-full mt-3">
+              <Button variant="outline" className="w-full mt-3 glass-btn">
                 {t("common.view")}
               </Button>
             </Link>
@@ -234,20 +242,25 @@ const Dashboard = () => {
         {/* Manager-only stats */}
 
         {/* Pending Reviews Card */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium glassy-text">
               {t("dashboard.pendingReviews")}
             </CardTitle>
             <LucideFileCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingReviews}</div>
+            <div className="text-2xl font-bold glassy-text">
+              {stats.pendingReviews}
+            </div>
             <p className="text-xs text-muted-foreground">
               {t("accomplishments.notReviewed")}
             </p>
             <Link to="/accomplishments?status=notReviewed">
-              <Button variant="outline" className="w-full mt-3">
+              <Button
+                variant="outline"
+                className="w-full mt-3 glass-btn glassy-text"
+              >
                 {t("common.view")}
               </Button>
             </Link>
@@ -255,26 +268,28 @@ const Dashboard = () => {
         </Card>
         {/* Employees Card */}
         {isManager && (
-          <Card>
+          <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium glassy-text">
                 {t("employees.title")}
               </CardTitle>
               <LucideUsers className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold glassy-text">
+                {stats.totalEmployees}
+              </div>
+              <p className="text-xs text-muted-foreground glassy-text">
                 {t("dashboard.totalEmployees")}
               </p>
               <div className="flex space-x-2 mt-2">
                 <Link to="/employees" className="flex-1 ml-3">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full glass-btn">
                     {t("common.view")}
                   </Button>
                 </Link>
                 <Link to="/employees/add" className="flex-1">
-                  <Button variant="default" className="w-full">
+                  <Button variant="default" className="w-full glass-btn">
                     {t("employees.add")}
                   </Button>
                 </Link>
@@ -286,16 +301,16 @@ const Dashboard = () => {
 
       {/* Recent Accomplishments List */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold glassy-text">
           {t("dashboard.recentAccomplishments")}
         </h2>
         {stats.recentAccomplishments.length > 0 ? (
           <div className="grid gap-4">
             {stats.recentAccomplishments.map((accomplishment) => (
-              <Card key={accomplishment._id}>
+              <Card key={accomplishment._id} className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-medium">
+                    <CardTitle className="text-base font-medium glassy-text">
                       {isManager
                         ? accomplishment.employee
                           ? accomplishment.employee.name
@@ -304,13 +319,13 @@ const Dashboard = () => {
                     </CardTitle>
                     <div
                       className={`px-2 py-1 rounded text-xs
-                      ${
-                        accomplishment.status === "reviewed"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : accomplishment.status === "needs_modification"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                      }`}
+                  ${
+                    accomplishment.status === "reviewed"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : accomplishment.status === "needs_modification"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                  }`}
                     >
                       {accomplishment.status === "reviewed"
                         ? t("accomplishments.reviewed")
@@ -319,7 +334,7 @@ const Dashboard = () => {
                         : t("accomplishments.notReviewed")}
                     </div>
                   </div>
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-xs glassy-text">
                     {new Date(accomplishment.createdAt).toLocaleDateString()} -{" "}
                     {new Date(accomplishment.createdAt).toLocaleTimeString()}
                   </CardDescription>
@@ -329,7 +344,10 @@ const Dashboard = () => {
                     {accomplishment.description}
                   </p>
                   <Link to={`/accomplishments/${accomplishment._id}`}>
-                    <Button variant="link" className="p-0 h-auto mt-2">
+                    <Button
+                      variant="link"
+                      className="glass-btn p-0 h-auto mt-2"
+                    >
                       {t("common.view")}
                     </Button>
                   </Link>
@@ -338,7 +356,7 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <Card>
+          <Card className="glass-card border-none">
             <CardContent className="py-4 text-center text-muted-foreground">
               {t("accomplishments.noAccomplishments")}
             </CardContent>
@@ -347,7 +365,7 @@ const Dashboard = () => {
 
         <div className="flex justify-center">
           <Link to="/accomplishments">
-            <Button variant="outline">
+            <Button variant="outline" className="glass-btn">
               {t("common.view")} {t("accomplishments.title")}
             </Button>
           </Link>

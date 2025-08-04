@@ -1,6 +1,6 @@
 import AccomplishmentFilesSection from "./AccomplishmentFilesSection";
 import AccomplishmentCommentsSection from "./AccomplishmentCommentsSection";
-import { useAuth } from "@/contexts/AuthContext"; // استورد hook
+import { useAuth } from "@/contexts/AuthContext";
 
 const AccomplishmentVersionBlock = ({
   version,
@@ -38,12 +38,12 @@ const AccomplishmentVersionBlock = ({
   }
 
   return (
-    <div className="border rounded-md mb-8 p-4 bg-gray-50">
+    <div className="glass-card border-none mb-8 p-4">
       <div className="mb-2 flex justify-between items-center">
-        <span className="font-semibold text-base">
+        <span className="font-semibold text-base glassy-text">
           {idx === total - 1 ? "آخر تعديل (الحالي)" : `نسخة رقم ${idx + 1}`}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground glassy-text">
           {(() => {
             const date = new Date(version.modifiedAt);
             const day = date.getDate().toString().padStart(2, "0");
@@ -54,7 +54,7 @@ const AccomplishmentVersionBlock = ({
           })()}
         </span>
       </div>
-      <div className="mb-3 p-3 rounded bg-white">
+      <div className="mb-3 p-3 rounded-xl glass-desc-box">
         <p className="whitespace-pre-wrap">{version.description}</p>
       </div>
       {/* ملفات الإصدار */}
@@ -78,23 +78,31 @@ const AccomplishmentVersionBlock = ({
 
       {/* **الفورم يظهر فقط للمدير** */}
       {allowComment && isManager && canAddComment && (
-        <form onSubmit={handleAddComment} className="mt-4 flex gap-2">
+        <form onSubmit={handleAddComment} className="mt-4 flex gap-2 items-end">
           <textarea
             value={commentText[idx] || ""}
             onChange={(e) =>
               setCommentText((prev) => ({ ...prev, [idx]: e.target.value }))
             }
             rows={2}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 glass-input resize-y min-h-[48px]"
             placeholder={t("accomplishments.addComment")}
+            style={{ direction: "rtl" }}
           />
-          <button type="submit" disabled={submitting}>
+          <button
+            type="submit"
+            disabled={submitting || !commentText[idx]?.trim()}
+            className={`glass-btn p-0 w-11 h-11 flex items-center justify-center border-none ${
+              submitting ? "opacity-60 pointer-events-none" : ""
+            }`}
+            tabIndex={-1}
+          >
             <svg
               viewBox="-2.4 -2.4 28.80 28.80"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               stroke="#"
-              className="w-8"
+              className="w-7"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g

@@ -84,12 +84,9 @@ const AccomplishmentsList = () => {
     const params = new URLSearchParams(location.search);
     const employeeId = params.get("employee") || "";
 
-    // إذا كان الموظف غير محدد في الفلاتر، عيّنه من الباراميتر
     if (employeeId && selectedEmployee !== employeeId) {
       setSelectedEmployee(employeeId);
-    }
-    // لو حابب يرجع للكل في حال حذف الباراميتر
-    else if (!employeeId && selectedEmployee) {
+    } else if (!employeeId && selectedEmployee) {
       setSelectedEmployee("");
     }
 
@@ -103,7 +100,6 @@ const AccomplishmentsList = () => {
         setLoading(true);
         setError(null);
 
-        // Build filters
         const filters: Record<string, string> = {};
         if (selectedEmployee && selectedEmployee !== "all")
           filters.employee = selectedEmployee;
@@ -123,12 +119,9 @@ const AccomplishmentsList = () => {
     fetchAccomplishments();
   }, [selectedEmployee, startDate, endDate]);
 
-  // Handle exporting to Excel
   const handleExport = async () => {
     try {
       setExporting(true);
-
-      // Build filters
       const filters: Record<string, string> = {};
       if (selectedEmployee) filters.employee = selectedEmployee;
       if (startDate) filters.startDate = startDate;
@@ -136,7 +129,6 @@ const AccomplishmentsList = () => {
 
       const response = await accomplishmentsAPI.exportAccomplishments(filters);
 
-      // Create a download link
       const link = document.createElement("a");
       link.href = `http://localhost:5000${response.filePath}`;
       link.download = response.fileName;
@@ -151,7 +143,6 @@ const AccomplishmentsList = () => {
     }
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setSelectedEmployee("");
     setStartDate("");
@@ -169,9 +160,7 @@ const AccomplishmentsList = () => {
 
   const params = new URLSearchParams(location.search);
   const statusParam = params.get("status");
-
   let accomplishmentsToDisplay = accomplishments;
-
   if (statusParam === "notReviewed") {
     accomplishmentsToDisplay = accomplishments.filter(
       (acc) => acc.status !== "reviewed"
@@ -179,19 +168,17 @@ const AccomplishmentsList = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen p-6 bg-gradient-to-br from-[#d1e9ff] via-[#f2f8fc] to-[#b6d2f8]">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight glassy-text">
           {t("accomplishments.title")}
         </h1>
-
         <div className="flex gap-2">
           {isManager && (
             <Button
-              variant="outline"
+              className="glass-btn flex items-center gap-1"
               disabled={exporting}
               onClick={handleExport}
-              className="flex items-center gap-1"
             >
               {exporting ? (
                 <>
@@ -206,18 +193,16 @@ const AccomplishmentsList = () => {
               )}
             </Button>
           )}
-
           <Button
-            variant={showFilters ? "secondary" : "outline"}
+            className="glass-btn flex items-center gap-1"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-1"
           >
             <LucideFilter className="h-4 w-4" />
             {t("accomplishments.filter")}
           </Button>
           {!isManager && (
             <Link to="/accomplishments/add">
-              <Button className="flex items-center gap-1">
+              <Button className="glass-btn flex items-center gap-1">
                 <LucidePlus className="h-4 w-4" />
                 {t("accomplishments.add")}
               </Button>
@@ -228,16 +213,16 @@ const AccomplishmentsList = () => {
 
       {/* Filters */}
       {showFilters && (
-        <Card className="bg-muted/40">
+        <Card className="glass-card border-none">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-base">
+              <CardTitle className="text-base glassy-text">
                 {t("accomplishments.filter")}
               </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="glass-btn h-8 w-8 p-0"
                 onClick={() => setShowFilters(false)}
               >
                 <LucideX className="h-4 w-4" />
@@ -246,7 +231,6 @@ const AccomplishmentsList = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Employee filter (managers only) */}
               {isManager && (
                 <div className="space-y-1">
                   <Label htmlFor="employee">
@@ -256,10 +240,10 @@ const AccomplishmentsList = () => {
                     value={selectedEmployee}
                     onValueChange={handleEmployeeChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="glass-input">
                       <SelectValue placeholder={t("employees.select")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="glass-dropdown">
                       <SelectItem value="all">
                         {t("employees.select")}
                       </SelectItem>
@@ -272,7 +256,6 @@ const AccomplishmentsList = () => {
                   </Select>
                 </div>
               )}
-              {/* Date filters */}
               <div className="space-y-1">
                 <Label htmlFor="startDate">
                   {t("accomplishments.startDate")}
@@ -280,6 +263,7 @@ const AccomplishmentsList = () => {
                 <Input
                   id="startDate"
                   type="date"
+                  className="glass-input"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
@@ -289,6 +273,7 @@ const AccomplishmentsList = () => {
                 <Input
                   id="endDate"
                   type="date"
+                  className="glass-input"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
@@ -296,7 +281,11 @@ const AccomplishmentsList = () => {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="ghost" onClick={clearFilters}>
+            <Button
+              variant="ghost"
+              className="glass-btn"
+              onClick={clearFilters}
+            >
               {t("accomplishments.clearFilter")}
             </Button>
           </CardFooter>
@@ -309,22 +298,20 @@ const AccomplishmentsList = () => {
           <LucideLoader className="h-8 w-8 animate-spin" />
         </div>
       ) : error ? (
-        <Card className="bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900">
+        <Card className="glass-card border border-red-200">
           <CardContent className="flex items-center gap-2 py-6">
             <span className="text-red-600 dark:text-red-400">{error}</span>
           </CardContent>
         </Card>
       ) : (
-        // Accomplishments list
         <div className="grid gap-4">
           {accomplishmentsToDisplay.length > 0 ? (
             accomplishmentsToDisplay.map((accomplishment) => (
-              <Card key={accomplishment._id}>
+              <Card key={accomplishment._id} className="glass-card border-none">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">
-                        {/* Only show employee name for managers */}
+                      <CardTitle className="text-lg glassy-text">
                         {isManager && (
                           <span className="font-medium">
                             {accomplishment.employee.name} -{" "}
@@ -360,8 +347,7 @@ const AccomplishmentsList = () => {
                       ) : accomplishment.status === "needs_modification" ? (
                         <span className="flex items-center gap-1">
                           <LucideFileClock className="h-3 w-3" />
-                          {t("accomplishments.needsModification")}{" "}
-                          {/* أضف ترجمة في ملف الترجمة */}
+                          {t("accomplishments.needsModification")}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1">
@@ -374,7 +360,6 @@ const AccomplishmentsList = () => {
                 </CardHeader>
                 <CardContent className="py-1">
                   <div className="flex flex-wrap gap-1 my-1">
-                    {/* Show file attachments */}
                     {accomplishment.files &&
                       accomplishment.files.length > 0 && (
                         <div className="flex items-center text-xs text-muted-foreground">
@@ -383,8 +368,6 @@ const AccomplishmentsList = () => {
                           {t("accomplishments.files").toLowerCase()}
                         </div>
                       )}
-
-                    {/* Show comments count */}
                     {accomplishment.comments &&
                       accomplishment.comments.length > 0 && (
                         <div className="flex items-center text-xs text-muted-foreground">
@@ -396,7 +379,7 @@ const AccomplishmentsList = () => {
                 </CardContent>
                 <CardFooter className="pt-0">
                   <Link to={`/accomplishments/${accomplishment._id}`}>
-                    <Button variant="outline" size="sm">
+                    <Button className="glass-btn" size="sm">
                       {t("common.view")}
                     </Button>
                   </Link>
@@ -404,12 +387,14 @@ const AccomplishmentsList = () => {
               </Card>
             ))
           ) : (
-            <Card>
+            <Card className="glass-card border-none">
               <CardContent className="py-8 text-center text-muted-foreground">
                 {t("accomplishments.noAccomplishments")}
                 <div className="mt-4">
                   <Link to="/accomplishments/add">
-                    <Button>{t("accomplishments.add")}</Button>
+                    <Button className="glass-btn">
+                      {t("accomplishments.add")}
+                    </Button>
                   </Link>
                 </div>
               </CardContent>

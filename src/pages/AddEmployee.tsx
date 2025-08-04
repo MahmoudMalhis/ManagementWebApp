@@ -85,29 +85,33 @@ const AddEmployee = () => {
     <div className="max-w-2xl mx-auto">
       <Button
         variant="ghost"
-        className="mb-4 flex items-center gap-1"
+        className="mb-4 flex items-center gap-1 glass-btn"
         onClick={() => navigate("/employees")}
       >
         <LucideArrowLeft className="h-4 w-4" />
         {t("common.back")}
       </Button>
 
-      <Card>
+      <Card className="glass-card border-none">
         <CardHeader>
-          <CardTitle>{t("employees.add")}</CardTitle>
-          <CardDescription>{t("employees.create")}</CardDescription>
+          <CardTitle className="glassy-text">{t("employees.add")}</CardTitle>
+          <CardDescription className="glassy-text">
+            {t("employees.create")}
+          </CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="glass-card">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">{t("employees.name")}</Label>
+              <Label htmlFor="name" className="glassy-text">
+                {t("employees.name")}
+              </Label>
               <Input
                 id="name"
                 name="name"
@@ -115,10 +119,13 @@ const AddEmployee = () => {
                 onChange={handleInputChange}
                 placeholder={t("employees.name")}
                 required
+                className="glass-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t("employees.password")}</Label>
+              <Label htmlFor="password" className="glassy-text">
+                {t("employees.password")}
+              </Label>
               <Input
                 id="password"
                 name="password"
@@ -127,11 +134,12 @@ const AddEmployee = () => {
                 onChange={handleInputChange}
                 placeholder="••••••••"
                 required
+                className="glass-input"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">
+              <Label htmlFor="confirmPassword" className="glassy-text">
                 {t("employees.confirmPassword")}
               </Label>
               <Input
@@ -142,6 +150,7 @@ const AddEmployee = () => {
                 onChange={handleInputChange}
                 placeholder="••••••••"
                 required
+                className="glass-input"
               />
             </div>
           </CardContent>
@@ -150,6 +159,7 @@ const AddEmployee = () => {
             <Button
               type="button"
               variant="outline"
+              className="glass-btn"
               onClick={() => navigate("/employees")}
             >
               {t("common.cancel")}
@@ -157,7 +167,7 @@ const AddEmployee = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 glass-btn"
             >
               {loading ? (
                 <>

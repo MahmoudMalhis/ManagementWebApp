@@ -36,13 +36,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="w-full max-w-md">
         {/* Language toggle at top */}
         <div className="flex justify-end mb-6">
           <Button
             variant="outline"
             size="sm"
+            className="glass-btn"
             onClick={() => {
               const newLang = i18n.language === "ar" ? "en" : "ar";
               i18n.changeLanguage(newLang);
@@ -54,45 +55,55 @@ const Login = () => {
           </Button>
         </div>
 
-        <Card>
+        <Card className="glass-card border-none">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">
+            <CardTitle className="text-2xl font-bold text-center glassy-text">
               {t("app.name")}
             </CardTitle>
-            <CardDescription className="text-center">
+            <CardDescription className="text-center glassy-text">
               {t("auth.login")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant="destructive" className="mb-4 glass-card">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">{t("auth.name")}</Label>
+                <Label htmlFor="name" className="glassy-text">
+                  {t("auth.name")}
+                </Label>
                 <Input
-                  id="text"
+                  id="name"
                   type="text"
                   placeholder={t("auth.name")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  className="glass-input"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">{t("auth.password")}</Label>
+                <Label htmlFor="password" className="glassy-text">
+                  {t("auth.password")}
+                </Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="glass-input"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full glass-btn"
+                disabled={loading}
+              >
                 {loading ? t("common.loading") : t("auth.loginButton")}
               </Button>
             </form>
