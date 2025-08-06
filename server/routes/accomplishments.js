@@ -37,11 +37,7 @@ router.get("/:id", protect, getAccomplishment);
 // Add comment to accomplishment (manager only)
 router.post(
   "/:id/comments",
-  [
-    protect,
-    authorize("manager"),
-    check("text", "Comment text is required").not().isEmpty(),
-  ],
+  [protect, check("text", "Comment text is required").not().isEmpty()],
   addComment
 );
 

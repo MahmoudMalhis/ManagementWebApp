@@ -17,7 +17,8 @@
     "employees": "Employees",
     "profile": "Profile",
     "settings": "Settings",
-    "gallery": "gallery"
+    "gallery": "gallery",
+    "taskTitles": "Task Titles"
   },
   "dashboard": {
     "welcome": "Welcome",

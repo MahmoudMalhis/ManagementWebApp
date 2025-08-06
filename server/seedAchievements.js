@@ -6,19 +6,13 @@ const { faker } = require("@faker-js/faker");
 // بيانات الموظفين (استخرجتها من الصورة)
 const employees = [
   {
-    _id: "68808386f3d527efed77fd45",
-    name: "John Employee",
-    email: "john@example.com",
+    _id: "6887813f7c748ff3a6a80900",
+    name: "naser",
   },
   {
-    _id: "68808386f3d527efed77fd46",
-    name: "Sarah Employee",
+    _id: "688781603bb218bb2d666e84",
+    name: "admin",
     email: "sarah@example.com",
-  },
-  {
-    _id: "6880b9bdb419c9dba7a5a4c3",
-    name: "ناصر",
-    email: "xahchat69@gmail.com",
   },
 ];
 

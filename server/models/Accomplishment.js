@@ -23,6 +23,15 @@ const AccomplishmentSchema = new mongoose.Schema(
       enum: ["pending", "reviewed", "needs_modification"],
       default: "pending",
     },
+    lastContentModifiedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    taskTitle: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TaskTitle",
+      required: true, // إذا كان لازم المهمة يكون إلها عنوان
+    },
     previousVersions: [
       {
         description: String,

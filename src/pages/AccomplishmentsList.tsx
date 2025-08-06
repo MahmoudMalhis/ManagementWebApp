@@ -44,6 +44,10 @@ interface Accomplishment {
     _id: string;
     name: string;
   };
+  taskTitle: {
+    _id: string;
+    name: string;
+  };
 }
 
 interface Employee {
@@ -316,6 +320,9 @@ const AccomplishmentsList = () => {
                     <span className="text-muted-foreground text-base">
                       {new Date(accomplishment.createdAt).toLocaleDateString()}
                     </span>
+                    <span className="capitalize font-bold">
+                      {accomplishment.taskTitle?.name}
+                    </span>
                     {isManager && (
                       <span className="capitalize font-bold">
                         {accomplishment.employee.name}
@@ -324,7 +331,7 @@ const AccomplishmentsList = () => {
                   </CardTitle>
                 </CardHeader>
                 <Link to={`/accomplishments/${accomplishment._id}`}>
-                  <CardDescription className="p-3 border-y border-[#aac8f0] h-20 bg-[#d5e2f9]">
+                  <CardDescription className="p-3 border-y border-[#aac8f0] h-20 bg-[#d5e2f9] overflow-hidden">
                     {accomplishment.description.length > 100
                       ? `${accomplishment.description.substring(0, 100)}...`
                       : accomplishment.description}

@@ -31,6 +31,11 @@ interface Accomplishment {
     _id: string;
     name: string;
   };
+  lastContentModifiedAt;
+  taskTitle: {
+    _id: string;
+    name: string;
+  };
 }
 
 interface DashboardStats {
@@ -101,7 +106,7 @@ const Dashboard = () => {
   ) {
     const now = new Date();
     return accomplishments.filter((acc) => {
-      const accDate = new Date(acc.createdAt);
+      const accDate = new Date(acc.lastContentModifiedAt || acc.createdAt);
       if (period === "day") {
         return accDate.toDateString() === now.toDateString();
       }
@@ -284,7 +289,7 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground glassy-text">
                 {t("dashboard.totalEmployees")}
               </p>
-              <div className="flex space-x-2 mt-2">
+              <div className="flex space-x-2 mt-2 md:flex-col md:gap-y-2">
                 <Link to="/employees" className="flex-1 ml-3">
                   <Button variant="outline" className="w-full glass-btn">
                     {t("common.view")}
@@ -316,14 +321,13 @@ const Dashboard = () => {
                 <CardHeader className="p-3 pb-2">
                   <CardTitle className="text-lg glassy-text flex justify-between">
                     <span className="text-muted-foreground text-sm">
-                      {accomplishment.updatedAt &&
-                      accomplishment.updatedAt !== accomplishment.createdAt
-                        ? new Date(
-                            accomplishment.updatedAt
-                          ).toLocaleDateString()
-                        : new Date(
-                            accomplishment.createdAt
-                          ).toLocaleDateString()}
+                      {new Date(
+                        accomplishment.lastContentModifiedAt ||
+                          accomplishment.createdAt
+                      ).toLocaleDateString()}
+                    </span>
+                    <span className="capitalize font-bold">
+                      {accomplishment.taskTitle?.name}
                     </span>
                     {isManager && (
                       <span className="capitalize font-bold">
@@ -333,7 +337,7 @@ const Dashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <Link to={`/accomplishments/${accomplishment._id}`}>
-                  <CardDescription className="p-3 border-y border-[#aac8f0] h-20 bg-[#d5e2f9]">
+                  <CardDescription className="p-3 border-y border-[#aac8f0] h-20 bg-[#d5e2f9]  overflow-hidden">
                     {accomplishment.description.length > 100
                       ? `${accomplishment.description.substring(0, 100)}...`
                       : accomplishment.description}

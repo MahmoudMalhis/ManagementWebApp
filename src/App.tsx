@@ -20,6 +20,7 @@ import CompareEmployees from "./pages/CompareEmployees";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import GalleryPage from "./pages/Gallery";
+import AdminTaskTitles from "./pages/AdminTaskTitles";
 
 const queryClient = new QueryClient();
 
@@ -79,15 +80,9 @@ const AppContent = () => {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="gallery" element={<GalleryPage />} />
+            <Route path="task-titles" element={<AdminTaskTitles />} />
             <Route path="accomplishments" element={<AccomplishmentsList />} />
-            <Route
-              path="accomplishments/add"
-              element={
-                <ProtectedRoute requiredRole="employee">
-                  <AddAccomplishment />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="accomplishments/add" element={<AddAccomplishment />} />
             <Route
               path="accomplishments/:id"
               element={<AccomplishmentDetails />}

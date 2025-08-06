@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { accomplishmentsAPI } from "@/api/api";
+import api, { accomplishmentsAPI } from "@/api/api";
 import { useSocket } from "@/contexts/SocketContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,18 +25,30 @@ const AddAccomplishment = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
   const { sendNewAccomplishment } = useSocket();
+  const [taskTitles, setTaskTitles] = useState<{ _id: string; name: string }[]>(
+    []
+  );
+  const [selectedTitle, setSelectedTitle] = useState("");
+  const [employees, setEmployees] = useState<{ _id: string; name: string }[]>(
+    []
+  );
+  const employeeFromURL = params.get("employee") || "";
+  const [selectedEmployee, setSelectedEmployee] = useState(employeeFromURL);
 
   useEffect(() => {
     if (user?.role === "manager") {
-      toast({
-        variant: "destructive",
-        title: t("common.error"),
-        description: t("common.notAuthorized"),
-      });
-      navigate("/accomplishments");
+      api
+        .get("/auth/employees")
+        .then((res) => setEmployees(res.data?.data || []));
     }
-  }, [user, navigate, toast, t]);
+  }, [user]);
+
+  useEffect(() => {
+    api.get("/task-titles").then((res) => setTaskTitles(res.data.data));
+  }, []);
 
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -70,10 +82,17 @@ const AddAccomplishment = () => {
 
       const formData = new FormData();
       formData.append("description", description);
-
+      formData.append("taskTitle", selectedTitle);
       files.forEach((file) => {
         formData.append("files", file);
       });
+      if (user?.role === "manager") {
+        if (!selectedEmployee) {
+          setError("يجب اختيار الموظف!");
+          return;
+        }
+        formData.append("employee", selectedEmployee);
+      }
 
       const response = await accomplishmentsAPI.createAccomplishment(formData);
 
@@ -112,7 +131,9 @@ const AddAccomplishment = () => {
       <Button
         variant="ghost"
         className="mb-4 flex items-center gap-1 glass-btn"
-        onClick={() => navigate("/accomplishments")}
+        onClick={() =>
+          navigate(user?.role === "manager" ? "/employees" : "/accomplishments")
+        }
       >
         <LucideArrowLeft className="h-4 w-4" />
         {t("common.back")}
@@ -135,7 +156,40 @@ const AddAccomplishment = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-
+            {user?.role === "manager" && (
+              <div className="mb-4">
+                <label className="block mb-2">اختر الموظف:</label>
+                <select
+                  value={selectedEmployee}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                  className="glass-input border p-2 rounded w-full"
+                  required
+                >
+                  <option value="">اختر الموظف...</option>
+                  {employees.map((emp) => (
+                    <option key={emp._id} value={emp._id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block mb-2">اختر عنوان المهمة:</label>
+              <select
+                value={selectedTitle}
+                onChange={(e) => setSelectedTitle(e.target.value)}
+                className="glass-input border p-2 rounded w-full"
+                required
+              >
+                <option value="">اختر...</option>
+                {taskTitles.map((title) => (
+                  <option key={title._id} value={title._id}>
+                    {title.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="description" className="glassy-text">
                 {t("accomplishments.description")}

@@ -9,6 +9,8 @@ import {
   LucideUsers,
   LucideLogOut,
   LucideX,
+  LucideImage,
+  LucideTags,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -43,7 +45,13 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
     {
       name: t("navigation.gallery"),
       path: "/gallery",
-      icon: LucideUsers,
+      icon: LucideImage,
+      roles: ["manager"],
+    },
+    {
+      name: t("navigation.taskTitles"),
+      path: "/task-titles",
+      icon: LucideTags,
       roles: ["manager"],
     },
   ];
@@ -99,7 +107,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
           <ul className="space-y-1">
             {filteredNavItems.map((item) => (
-              <li key={item.path}>
+              <li key={item.path} onClick={onClose}>
                 <Link
                   to={item.path}
                   className={cn(

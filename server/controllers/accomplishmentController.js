@@ -3,7 +3,8 @@ const ExcelJS = require("exceljs");
 const path = require("path");
 const fs = require("fs");
 const Accomplishment = require("../models/Accomplishment");
-const User = require("../models/User");
+const Notification = require("../models/Notification");
+const TaskTitle = require("../models/TaskTitle");
 let io;
 try {
   io = require("../server").io;
@@ -18,14 +19,12 @@ try {
 // @access  Private
 exports.createAccomplishment = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    const { description, taskTitle, employee } = req.body;
 
-    const { description } = req.body;
+    // تحديد الموظف المستهدف: الموظف الحالي أو الموظف الذي اختاره المدير
+    const employeeId = req.user.role === "manager" ? employee : req.user.id;
 
-    // Handle file uploads
+    // معالجة الملفات (إذا وجدت)
     const files = [];
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
@@ -37,22 +36,54 @@ exports.createAccomplishment = async (req, res) => {
       });
     }
 
+    // إنشاء الإنجاز
     const accomplishment = await Accomplishment.create({
       description,
-      employee: req.user.id,
+      taskTitle,
+      employee: employeeId,
       files,
     });
 
+    // جلب اسم عنوان المهمة (اختياري للرسالة)
+    let taskTitleName = "";
+    try {
+      const titleObj = await TaskTitle.findById(taskTitle);
+      taskTitleName = titleObj ? titleObj.name : "";
+    } catch (e) {}
+
+    // إنشاء إشعار للموظف المستهدف
+    await Notification.create({
+      user: employeeId,
+      type: "new_task",
+      message: `تم تعيين مهمة جديدة لك: ${taskTitleName}`,
+      data: { accomplishmentId: accomplishment._id, taskTitle: taskTitleName },
+    });
+
+    // إرسال إشعار socket.io للموظف مباشرة إذا متصل
+    if (io) {
+      io.to(employeeId).emit("notification", {
+        type: "new_task",
+        message: `تم تعيين مهمة جديدة لك: ${taskTitleName}`,
+        data: {
+          accomplishmentId: accomplishment._id,
+          taskTitle: taskTitleName,
+        },
+      });
+    }
+
+    // جلب الإنجاز مع تفاصيل المستخدم (اختياري)
     const populatedAccomplishment = await Accomplishment.findById(
       accomplishment._id
-    ).populate("employee", "name email");
+    )
+      .populate("employee", "name email")
+      .populate("taskTitle", "name");
 
     res.status(201).json({
       success: true,
       data: populatedAccomplishment,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -97,8 +128,9 @@ exports.getAccomplishments = async (req, res) => {
     }
 
     const accomplishments = await Accomplishment.find(query)
-      .populate("employee", "name email")
+      .populate("employee", "name")
       .populate("comments.commentedBy", "name role")
+      .populate("taskTitle", "name")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -331,6 +363,7 @@ exports.modifyAccomplishment = async (req, res) => {
     }
 
     accomplishment.status = "pending";
+    accomplishment.lastContentModifiedAt = Date.now();
     await accomplishment.save();
 
     // جلب النسخة بعد التعديل
@@ -380,11 +413,6 @@ exports.exportAccomplishments = async (req, res) => {
     } else if (req.query.endDate) {
       query.createdAt = { $lte: new Date(req.query.endDate) };
     }
-
-    // Get all accomplishments with employee details
-    const accomplishments = await Accomplishment.find(query)
-      .populate("employee", "name email")
-      .sort({ createdAt: -1 });
 
     // Create Excel file
     const workbook = new ExcelJS.Workbook();

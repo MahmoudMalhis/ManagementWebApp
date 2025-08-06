@@ -13,7 +13,6 @@ const AccomplishmentCommentsSection = ({
   handleReplySubmit,
   accomplishmentStatus,
   idx,
-  total,
 }) => {
   const allowReply = accomplishmentStatus !== "reviewed" && idx === 0;
 
@@ -25,8 +24,14 @@ const AccomplishmentCommentsSection = ({
           className="mb-2 p-3 rounded-xl glass-card border-none"
         >
           <div className="flex items-center gap-2">
-            <Avatar className="h-7 w-7 glassy-avatar">
-              <AvatarFallback>
+            <Avatar className="h-7 w-7 glassy-avatar ">
+              <AvatarFallback
+                className={`${
+                  comment.commentedBy.role === "manager"
+                    ? "glass-badge border-blue-200 !bg-[rgba(212,233,255)]"
+                    : "glass-badge border-green-200 !bg-[rgba(210,255,222)]"
+                }`}
+              >
                 {comment.commentedBy.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -47,14 +52,10 @@ const AccomplishmentCommentsSection = ({
                 key={reply._id}
                 className={`ml-10 mt-2 p-2 rounded-xl glass-card border-none ${
                   reply.commentedBy.role === "manager"
-                    ? "glass-badge border-blue-200"
-                    : "glass-badge border-green-200"
+                    ? "glass-badge border-blue-200 !bg-[rgba(212,233,255)]"
+                    : "glass-badge border-green-200 !bg-[rgba(210,255,222)]"
                 }`}
                 style={{
-                  background:
-                    reply.commentedBy.role === "manager"
-                      ? "rgba(212,233,255,0.25)"
-                      : "rgba(210,255,222,0.22)",
                   borderLeft:
                     reply.commentedBy.role === "manager"
                       ? "4px solid #3884db"
@@ -80,12 +81,13 @@ const AccomplishmentCommentsSection = ({
           {/* زر الرد */}
           {allowReply && canReply(comment) && (
             <button
-              className="mt-3 mr-3 glass-btn px-2 py-1"
+              className="mt-3 mr-3 glass-btn px-2 py-1 flex"
               style={{ fontSize: "13px" }}
               onClick={() =>
                 setReplyTo(replyTo === comment._id ? null : comment._id)
               }
             >
+              <span className="ml-2">{t("accomplishments.reply")}</span>
               <svg
                 fill="#2563eb"
                 viewBox="0 0 1920 1920"
@@ -98,7 +100,6 @@ const AccomplishmentCommentsSection = ({
                   fillRule="evenodd"
                 ></path>
               </svg>
-              <span className="ml-1">{t("accomplishments.reply")}</span>
             </button>
           )}
           {/* نموذج الرد */}

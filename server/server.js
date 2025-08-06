@@ -5,6 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
 const connectDB = require("./config/db");
+const taskTitlesRoutes = require("./routes/taskTitles");
 
 // Load env vars
 dotenv.config();
@@ -94,7 +95,7 @@ io.on("connection", (socket) => {
 // Mount routers
 app.use("/api/auth", auth);
 app.use("/api/accomplishments", accomplishments);
-
+app.use("/api/task-titles", taskTitlesRoutes);
 app.use("/api/gallery", require("./routes/gallery"));
 
 // Global error handler

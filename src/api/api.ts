@@ -172,4 +172,44 @@ reviewAccomplishment: async (id: string, status: string) => {
 
 };
 
+// Task Titles API calls
+export const taskTitlesAPI = {
+  // جلب جميع العناوين (يستخدمه الموظف والمدير)
+  getAll: async () => {
+    try {
+      const res = await api.get('/task-titles');
+      return res.data.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Server error' };
+    }
+  },
+  // إضافة عنوان جديد (للمدير فقط)
+  add: async (name: string) => {
+    try {
+      const res = await api.post('/task-titles', { name });
+      return res.data.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Server error' };
+    }
+  },
+  // تعديل عنوان
+  edit: async (id: string, name: string) => {
+    try {
+      const res = await api.put(`/task-titles/${id}`, { name });
+      return res.data.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Server error' };
+    }
+  },
+  // حذف عنوان
+  remove: async (id: string) => {
+    try {
+      await api.delete(`/task-titles/${id}`);
+      return true;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Server error' };
+    }
+  }
+};
+
 export default api;

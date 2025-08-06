@@ -17,7 +17,8 @@
     "employees": "الموظفين",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
-    "gallery": "معرض الأعمال"
+    "gallery": "معرض الأعمال",
+    "taskTitles": "عناوين المهمات"
   },
   "dashboard": {
     "welcome": "مرحبا",

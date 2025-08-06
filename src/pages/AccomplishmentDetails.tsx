@@ -96,7 +96,6 @@ const AccomplishmentDetails = () => {
   // عند الضغط على تم للمراجعة، افتح الـ popup
   const openGalleryPopup = async () => {
     if (!allFiles || allFiles.length === 0) {
-      await handleReviewAccomplishment("reviewed");
       return;
     }
     const res = await api.get("/gallery/folders");
@@ -110,19 +109,11 @@ const AccomplishmentDetails = () => {
       folderName: folderName === "__NEW__" ? newFolderName : folderName,
     });
     setShowGalleryPopup(false);
-    handleReviewAccomplishment("reviewed");
     alert("تمت الإضافة للمعرض!");
   };
 
   const canCurrentUserReply = (comment) => {
-    // إذا كان المستخدم مدير أو إذا كان المستخدم موظف وهذا تعليف مدير (وليس رده هو نفسه)
-    if (isManager) return true;
-    if (
-      user?._id === accomplishment.employee._id && // الموظف نفسه
-      comment.commentedBy.role === "manager"
-    )
-      return true;
-    return false;
+    return true;
   };
 
   const handleAddComment = async (e, versionIndex) => {
@@ -222,27 +213,16 @@ const AccomplishmentDetails = () => {
       description: accomplishment.description,
       files: accomplishment.files,
       modifiedAt:
-        accomplishment.updatedAt &&
-        accomplishment.updatedAt !== accomplishment.createdAt
-          ? accomplishment.updatedAt
-          : accomplishment.createdAt,
+        accomplishment.lastContentModifiedAt || accomplishment.createdAt,
       _id: "current",
     },
   ];
 
-  function getDisplayVersions(versions) {
-    if (versions.length <= 1) return versions;
-    const rest = versions.slice(1);
-    return [...rest, versions[0]]; // النسخة الأصلية في النهاية
-  }
   const displayVersions = [...versions].reverse();
   // جلب جميع الردود
   const allReplies = accomplishment.comments.filter((c) => c.isReply);
   function getLastModifiedDate(acc) {
-    if (acc.previousVersions && acc.previousVersions.length > 0) {
-      return acc.previousVersions[acc.previousVersions.length - 1].modifiedAt;
-    }
-    return acc.createdAt;
+    return acc.lastContentModifiedAt || acc.createdAt;
   }
   return (
     <div className="max-w-3xl mx-auto">
@@ -345,9 +325,8 @@ const AccomplishmentDetails = () => {
                 submitting={submitting}
                 handleReplySubmit={handleReplySubmit}
                 canAddComment={
-                  isManager ||
-                  (user?._id === accomplishment.employee._id &&
-                    originalIdx === versions.length - 1)
+                  (user?._id === accomplishment.employee._id || isManager) &&
+                  originalIdx === versions.length - 1
                 }
                 commentText={commentText}
                 setCommentText={setCommentText}
@@ -359,36 +338,48 @@ const AccomplishmentDetails = () => {
           })}
 
           {/* أزرار المراجعة (فقط للمدير) */}
-          {isManager && accomplishment.status !== "reviewed" && (
-            <div className="flex justify-end gap-2">
+          <div className="flex justify-between">
+            {isManager && accomplishment.status !== "reviewed" && (
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => handleReviewAccomplishment("reviewed")}
+                  disabled={reviewing}
+                  className="flex items-center gap-2 glass-btn"
+                >
+                  {reviewing ? (
+                    <LucideLoader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LucideCheck className="h-4 w-4" />
+                  )}
+                  {t("accomplishments.review")}
+                </Button>
+                <Button
+                  onClick={() =>
+                    handleReviewAccomplishment("needs_modification")
+                  }
+                  variant="outline"
+                  disabled={reviewing}
+                  className="flex items-center gap-2 glass-btn"
+                >
+                  {reviewing ? (
+                    <LucideLoader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LucideCheck className="h-4 w-4" />
+                  )}
+                  {t("accomplishments.needsModification")}
+                </Button>
+              </div>
+            )}
+            {allFiles.length !== 0 && (
               <Button
                 onClick={openGalleryPopup}
-                disabled={reviewing}
-                className="flex items-center gap-2 glass-btn"
-              >
-                {reviewing ? (
-                  <LucideLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <LucideCheck className="h-4 w-4" />
-                )}
-                {t("accomplishments.review")}
-              </Button>
-              <Button
-                onClick={() => handleReviewAccomplishment("needs_modification")}
                 variant="outline"
-                disabled={reviewing}
                 className="flex items-center gap-2 glass-btn"
               >
-                {reviewing ? (
-                  <LucideLoader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <LucideCheck className="h-4 w-4" />
-                )}
-                {t("accomplishments.needsModification")}
+                اضافة الى المعرض
               </Button>
-            </div>
-          )}
-
+            )}
+          </div>
           {/* زر تعديل الإنجاز */}
           {accomplishment.status === "needs_modification" &&
             user?._id === accomplishment.employee._id && (
@@ -406,7 +397,7 @@ const AccomplishmentDetails = () => {
             className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
             style={{ backdropFilter: "blur(2px)" }}
           >
-            <div className="glass-popup rounded-2xl p-6 min-w-[320px] max-w-md shadow-xl border border-white/30 backdrop-blur-xl">
+            <div className="glass-popup rounded-2xl p-6 min-w-[320px] max-w-md shadow-xl border ">
               <h2 className="mb-4 font-bold glassy-text">
                 اختر الملفات للمعرض
               </h2>

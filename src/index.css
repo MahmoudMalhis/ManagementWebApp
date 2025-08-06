@@ -59,7 +59,7 @@ body {
 }
 
 .glass-card {
-  background: rgba(245, 248, 255, 0.18) !important;
+  background: rgba(245, 248, 255, 0.18);
   border-radius: 1.2rem !important;
   border: 1.3px solid rgba(170, 200, 240, 3);
   box-shadow: 0 8px 32px 0 rgba(120, 156, 222, 0.1);
@@ -115,10 +115,38 @@ body {
 }
 
 .glass-sidebar {
-  background: rgba(245, 248, 255, 0.14) !important;
+  background: rgba(245, 248, 255, 0.5) !important;
   box-shadow: 0 8px 32px 0 rgba(120, 156, 222, 0.09);
   border-right: 1.5px solid rgba(160, 200, 240, 0.13);
   backdrop-filter: blur(13px);
   -webkit-backdrop-filter: blur(13px);
   transition: background 0.17s;
+}
+
+.glass-popup {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.14);
+  border-radius: 1.5rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: box-shadow 0.25s, transform 0.22s;
+}
+.glass-popup input,
+.glass-popup select {
+  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 0.6rem;
+  box-shadow: 0 1px 5px 0 rgba(100, 150, 200, 0.06);
+  backdrop-filter: blur(3px);
+  outline: none;
+  color: #163154;
+}
+.glass-popup input::placeholder {
+  color: #ddd;
+}
+
+.glass-popup input:focus,
+.glass-popup select:focus {
+  border-color: #a2b8e6;
 }

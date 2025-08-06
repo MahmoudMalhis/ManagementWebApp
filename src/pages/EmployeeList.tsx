@@ -156,6 +156,19 @@ const EmployeeList = () => {
                           </Button>
                         </Link>
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Link
+                          to={`/accomplishments/add?employee=${employee._id}`}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1 glass-btn"
+                          >
+                            إضافة مهمة
+                          </Button>
+                        </Link>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

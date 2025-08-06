@@ -26,10 +26,7 @@ const AccomplishmentVersionBlock = ({
   const { isManager } = useAuth();
 
   const allowComment =
-    isManager &&
-    canAddComment &&
-    accomplishmentStatus !== "reviewed" &&
-    idx === 0;
+    canAddComment && accomplishmentStatus !== "reviewed" && idx === 0;
 
   let dateDisplay = "";
   if (version.modifiedAt) {
@@ -73,11 +70,10 @@ const AccomplishmentVersionBlock = ({
         handleReplySubmit={handleReplySubmit}
         accomplishmentStatus={accomplishmentStatus}
         idx={idx}
-        total={total}
       />
 
       {/* **الفورم يظهر فقط للمدير** */}
-      {allowComment && isManager && canAddComment && (
+      {allowComment && canAddComment && (
         <form onSubmit={handleAddComment} className="mt-4 flex gap-2 items-end">
           <textarea
             value={commentText[idx] || ""}
