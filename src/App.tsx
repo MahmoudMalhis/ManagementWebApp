@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import GalleryPage from "./pages/Gallery";
 import AdminTaskTitles from "./pages/AdminTaskTitles";
+import NotificationsPage from "./pages/NotificationsPage";
+import { NotificationsProvider } from "./contexts/NotificationsContext";
 
 const queryClient = new QueryClient();
 
@@ -64,72 +66,75 @@ const AppContent = () => {
   }, [i18n.language]);
 
   return (
-    <SocketProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="gallery" element={<GalleryPage />} />
+          <Route path="task-titles" element={<AdminTaskTitles />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="accomplishments" element={<AccomplishmentsList />} />
+          <Route path="accomplishments/add" element={<AddAccomplishment />} />
           <Route
-            path="/"
+            path="accomplishments/:id"
+            element={<AccomplishmentDetails />}
+          />
+          <Route
+            path="employees"
             element={
-              <ProtectedRoute>
-                <Layout />
+              <ProtectedRoute requiredRole="manager">
+                <EmployeeList />
               </ProtectedRoute>
             }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="gallery" element={<GalleryPage />} />
-            <Route path="task-titles" element={<AdminTaskTitles />} />
-            <Route path="accomplishments" element={<AccomplishmentsList />} />
-            <Route path="accomplishments/add" element={<AddAccomplishment />} />
-            <Route
-              path="accomplishments/:id"
-              element={<AccomplishmentDetails />}
-            />
-            <Route
-              path="employees"
-              element={
-                <ProtectedRoute requiredRole="manager">
-                  <EmployeeList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="employees/add"
-              element={
-                <ProtectedRoute requiredRole="manager">
-                  <AddEmployee />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="employees/compare"
-              element={
-                <ProtectedRoute requiredRole="manager">
-                  <CompareEmployees />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+          />
+          <Route
+            path="employees/add"
+            element={
+              <ProtectedRoute requiredRole="manager">
+                <AddEmployee />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="employees/compare"
+            element={
+              <ProtectedRoute requiredRole="manager">
+                <CompareEmployees />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </SocketProvider>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Suspense fallback={<div>Loading...</div>}>
-      <TooltipProvider>
-        <Toaster />
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </TooltipProvider>
-    </Suspense>
+    <AuthProvider>
+      <SocketProvider>
+        <NotificationsProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <TooltipProvider>
+              <Toaster />
+              <AppContent />
+            </TooltipProvider>
+          </Suspense>
+        </NotificationsProvider>
+      </SocketProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

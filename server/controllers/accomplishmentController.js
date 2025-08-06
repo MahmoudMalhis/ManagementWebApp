@@ -5,6 +5,8 @@ const fs = require("fs");
 const Accomplishment = require("../models/Accomplishment");
 const Notification = require("../models/Notification");
 const TaskTitle = require("../models/TaskTitle");
+const User = require("../models/User");
+
 let io;
 try {
   io = require("../server").io;
@@ -69,6 +71,31 @@ exports.createAccomplishment = async (req, res) => {
           taskTitle: taskTitleName,
         },
       });
+    }
+
+    if (req.user.role === "employee") {
+      const managers = await User.find({ role: "manager" });
+      for (const manager of managers) {
+        await Notification.create({
+          user: manager._id,
+          type: "new_task",
+          message: `قام الموظف ${req.user.name} بإضافة مهمة جديدة بعنوان "${taskTitleName}"`,
+          data: {
+            accomplishmentId: accomplishment._id,
+            taskTitle: taskTitleName,
+          },
+        });
+        if (io) {
+          io.to(manager._id.toString()).emit("notification", {
+            type: "new_task",
+            message: `قام الموظف ${req.user.name} بإضافة مهمة جديدة بعنوان "${taskTitleName}"`,
+            data: {
+              accomplishmentId: accomplishment._id,
+              taskTitle: taskTitleName,
+            },
+          });
+        }
+      }
     }
 
     // جلب الإنجاز مع تفاصيل المستخدم (اختياري)
@@ -202,6 +229,47 @@ exports.addComment = async (req, res) => {
     accomplishment.comments.unshift(comment);
     await accomplishment.save();
 
+    if (req.user.role === "manager") {
+      await Notification.create({
+        user: accomplishment.employee,
+        type: "comment",
+        message: "تم إضافة تعليق جديد على مهمتك",
+        data: { accomplishmentId: accomplishment._id, commentText: text },
+      });
+      if (io) {
+        io.to(accomplishment.employee.toString()).emit("notification", {
+          type: "comment",
+          message: "تم إضافة تعليق جديد على مهمتك",
+          data: { accomplishmentId: accomplishment._id, commentText: text },
+        });
+      }
+    }
+    // إذا الموظف أضاف تعليق، أرسل إشعار للمدراء
+    if (req.user.role === "employee") {
+      // جلب بيانات الموظف
+      const User = require("../models/User");
+      const employeeUser = await User.findById(req.user.id);
+      if (!employeeUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const managers = await User.find({ role: "manager" });
+      for (const manager of managers) {
+        await Notification.create({
+          user: manager._id,
+          type: "comment",
+          message: `قام الموظف ${req.user.name} بإضافة تعليق على المهمة "${accomplishment.description}"`,
+          data: { accomplishmentId: accomplishment._id, commentText: text },
+        });
+        if (io) {
+          io.to(manager._id.toString()).emit("notification", {
+            type: "comment",
+            message: `قام الموظف ${req.user.name} بإضافة تعليق على المهمة "${accomplishment.description}"`,
+            data: { accomplishmentId: accomplishment._id, commentText: text },
+          });
+        }
+      }
+    }
+
     const updatedAccomplishment = await Accomplishment.findById(req.params.id)
       .populate("employee", "name email")
       .populate("comments.commentedBy", "name role");
@@ -209,6 +277,7 @@ exports.addComment = async (req, res) => {
     res.json({ success: true, data: updatedAccomplishment });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server Error" });
+    console.error(err);
   }
 };
 
@@ -245,16 +314,98 @@ exports.addEmployeeReply = async (req, res) => {
       });
     }
 
-    // Check if the comment exists
-    const commentExists = accomplishment.comments.some(
-      (comment) => comment._id.toString() === commentId
+    // جلب التعليق نفسه وليس فقط التحقق بوجوده
+    const comment = accomplishment.comments.find(
+      (c) => c._id.toString() === commentId
     );
-
-    if (!commentExists) {
+    if (!comment) {
       return res.status(404).json({
         success: false,
         message: "Comment not found",
       });
+    }
+
+    // إشعار صاحب التعليق إذا كان غير نفس الموظف الحالي
+    if (comment.commentedBy.toString() !== req.user.id) {
+      await Notification.create({
+        user: comment.commentedBy,
+        type: "reply",
+        message: `قام ${req.user.name} بالرد على تعليقك في المهمة`,
+        data: { accomplishmentId: accomplishment._id, replyText: text },
+      });
+      if (io) {
+        io.to(comment.commentedBy.toString()).emit("notification", {
+          type: "reply",
+          message: `قام ${req.user.name} بالرد على تعليقك في المهمة`,
+          data: { accomplishmentId: accomplishment._id, replyText: text },
+        });
+      }
+    }
+
+    // إشعار جميع المدراء بأن هناك رد جديد
+    if (req.user.role === "employee") {
+      const managers = await User.find({ role: "manager" });
+      for (const manager of managers) {
+        await Notification.create({
+          user: manager._id, // يجب أن تضع id المدير هنا!
+          type: "reply",
+          message: `قام الموظف ${req.user.name} بالرد على تعليق في المهمة "${accomplishment.description}"`,
+          data: { accomplishmentId: accomplishment._id, replyText: text },
+        });
+      }
+      // إرسال مرة واحدة لغرفة المدراء بالسوكيت
+      if (io) {
+        io.to("managers").emit("notification", {
+          type: "reply",
+          message: `قام الموظف ${req.user.name} بالرد على تعليق في المهمة "${accomplishment.description}"`,
+          data: { accomplishmentId: accomplishment._id, replyText: text },
+        });
+      }
+    }
+
+    // إشعار جميع المدراء إذا كان المرسل موظف (باستثناء إذا كان المدير هو صاحب الرد السابق)
+    if (req.user.role === "employee") {
+      const managers = await User.find({ role: "manager" });
+      for (const manager of managers) {
+        // لا ترسل للمدير إذا هو نفسه صاحب التعليق السابق وأخذ إشعار أصلاً
+        if (comment.commentedBy.toString() === manager._id.toString()) continue;
+        await Notification.create({
+          user: manager._id,
+          type: "reply",
+          message: `قام الموظف ${req.user.name} بالرد على تعليق في المهمة "${accomplishment.description}"`,
+          data: { accomplishmentId: accomplishment._id, replyText: text },
+        });
+      }
+      if (io) {
+        io.to("managers").emit("notification", {
+          type: "reply",
+          message: `قام الموظف ${req.user.name} بالرد على تعليق في المهمة "${accomplishment.description}"`,
+          data: { accomplishmentId: accomplishment._id, replyText: text },
+        });
+      }
+    }
+
+    // إشعار جميع الموظفين إذا كان المرسل مدير (باستثناء إذا كان الموظف نفسه صاحب التعليق السابق وأخذ إشعار أصلاً)
+    if (req.user.role === "manager") {
+      // إذا كان هناك موظف صاحب الإنجاز وليس نفس صاحب الرد السابق
+      if (
+        accomplishment.employee.toString() !== req.user.id &&
+        comment.commentedBy.toString() !== accomplishment.employee.toString()
+      ) {
+        await Notification.create({
+          user: accomplishment.employee,
+          type: "reply",
+          message: `قام المدير ${req.user.name} بالرد على تعليقك في المهمة "${accomplishment.description}"`,
+          data: { accomplishmentId: accomplishment._id, replyText: text },
+        });
+        if (io) {
+          io.to(accomplishment.employee.toString()).emit("notification", {
+            type: "reply",
+            message: `قام المدير ${req.user.name} بالرد على تعليقك في المهمة "${accomplishment.description}"`,
+            data: { accomplishmentId: accomplishment._id, replyText: text },
+          });
+        }
+      }
     }
 
     const reply = {
@@ -380,11 +531,32 @@ exports.modifyAccomplishment = async (req, res) => {
       });
     }
 
+    const managers = await User.find({ role: "manager" });
+    const notificationPromises = managers.map((manager) =>
+      Notification.create({
+        user: manager._id,
+        type: "modification",
+        message: `قام الموظف ${req.user.name} بتعديل المهمة "${updatedAccomplishment.description}"`,
+        data: { accomplishmentId: updatedAccomplishment._id },
+      })
+    );
+    await Promise.all(notificationPromises);
+
+    // إشعار Socket.io لكل المدراء (إرسال واحد يكفي لأنهم في نفس الغرفة)
+    if (io) {
+      io.to("managers").emit("notification", {
+        type: "modification",
+        message: `قام الموظف ${req.user.name} بتعديل المهمة "${updatedAccomplishment.description}"`,
+        data: { accomplishmentId: updatedAccomplishment._id },
+      });
+    }
+
     return res.status(200).json({
       success: true,
       data: updatedAccomplishment,
     });
   } catch (err) {
+    console.log(err);
     res
       .status(500)
       .json({ success: false, message: "Server Error", error: err.message });

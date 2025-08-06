@@ -1,18 +1,10 @@
-// route: GET /api/notifications
-// require login
-exports.getNotifications = async (req, res) => {
-  try {
-    const notifications = await Notification.find({ user: req.user.id }).sort({
-      createdAt: -1,
-    });
-    res.json({ success: true, data: notifications });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-};
+const express = require("express");
+const router = express.Router();
+const notificationsController = require("../controllers/notifications"); // عدّل المسار حسب مشروعك
+const { protect } = require("../middlewares/auth"); // تأكد أنك تستعمل الميدل وير الصحيح
 
-// route: PUT /api/notifications/:id/read
-exports.markNotificationRead = async (req, res) => {
-  await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
-  res.json({ success: true });
-};
+router.get("/", protect, notificationsController.getNotifications);
+router.post("/mark-all-read", protect, notificationsController.markAllRead);
+router.put("/:id/read", protect, notificationsController.markNotificationRead);
+
+module.exports = router;

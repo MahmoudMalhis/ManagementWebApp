@@ -11,7 +11,10 @@ import {
   LucideX,
   LucideImage,
   LucideTags,
+  LucideBell,
 } from "lucide-react";
+import { useNotifications } from "@/contexts/NotificationsContext";
+import { useEffect } from "react";
 
 interface SidebarProps {
   open: boolean;
@@ -21,7 +24,8 @@ interface SidebarProps {
 const Sidebar = ({ open, onClose }: SidebarProps) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { user, logout, isManager } = useAuth();
+  const { user, logout } = useAuth();
+  const { unreadCount, notifications } = useNotifications();
 
   const navigationItems = [
     {
@@ -54,11 +58,22 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
       icon: LucideTags,
       roles: ["manager"],
     },
+    {
+      name: t("navigation.notifications"),
+      path: "/notifications",
+      icon: LucideBell,
+      roles: ["manager", "employee"],
+    },
   ];
 
   const filteredNavItems = navigationItems.filter((item) =>
     item.roles.includes(user?.role || "")
   );
+
+  useEffect(() => {
+    console.log("notifications updated!", notifications);
+    console.log("unreadCount:", unreadCount);
+  }, [notifications]);
 
   return (
     <>
@@ -111,7 +126,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all glass-nav-link",
+                    "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all glass-nav-link relative", // أضفت relative هنا
                     location.pathname.startsWith(item.path)
                       ? "glass-nav-link-active"
                       : "hover:bg-white/25"
@@ -120,6 +135,12 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
                   <item.icon className="h-5 w-5" />
                   <span>{item.name}</span>
                 </Link>
+                {/* نقلت العداد هنا وجعلته مطلقًا بالنسبة لـ li */}
+                {item.path === "/notifications" && unreadCount > 0 && (
+                  <span className="absolute top-[270px] right-4 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

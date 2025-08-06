@@ -18,7 +18,8 @@
     "profile": "Profile",
     "settings": "Settings",
     "gallery": "gallery",
-    "taskTitles": "Task Titles"
+    "taskTitles": "Task Titles",
+    "notifications": "Notifications"
   },
   "dashboard": {
     "welcome": "Welcome",

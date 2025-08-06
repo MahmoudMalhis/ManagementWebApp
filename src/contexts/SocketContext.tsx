@@ -57,7 +57,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setConnected(true);
 
         // Join rooms based on user role and id
-        socketInstance.emit("joinRoom", { userId: user.id, role: user.role });
+        socketInstance.emit("joinRoom", { userId: user._id, role: user.role });
       });
 
       // Handle notifications for managers
