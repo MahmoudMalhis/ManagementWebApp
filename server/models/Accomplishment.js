@@ -9,7 +9,7 @@ const AccomplishmentSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
+      // required: true,
     },
     files: [
       {
@@ -18,9 +18,25 @@ const AccomplishmentSchema = new mongoose.Schema(
         fileType: String,
       },
     ],
+    originalDescription: { type: String }, // وصف المدير الأساسي
+    originalFiles: [
+      {
+        fileName: String,
+        filePath: String,
+        fileType: String,
+      },
+    ],
+    employeeDescription: { type: String }, // وصف الموظف عند بدء المهمة
+    employeeFiles: [
+      {
+        fileName: String,
+        filePath: String,
+        fileType: String,
+      },
+    ],
     status: {
       type: String,
-      enum: ["pending", "reviewed", "needs_modification"],
+      enum: ["assigned", "pending", "reviewed", "needs_modification"],
       default: "pending",
     },
     lastContentModifiedAt: {

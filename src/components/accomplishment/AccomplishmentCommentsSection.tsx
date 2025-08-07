@@ -112,7 +112,7 @@ const AccomplishmentCommentsSection = ({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 className="w-full p-2 glass-input resize-y min-h-[40px]"
-                placeholder={t("accomplishments.writeReply")}
+                placeholder={t("accomplishments.reply")}
                 rows={2}
                 style={{ direction: "rtl" }}
               />

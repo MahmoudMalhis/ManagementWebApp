@@ -9,6 +9,7 @@ const {
   exportAccomplishments,
   addEmployeeReply,
   modifyAccomplishment,
+  startAccomplishment,
 } = require("../controllers/accomplishmentController");
 const { protect, authorize } = require("../middlewares/auth");
 const upload = require("../middlewares/upload");
@@ -20,7 +21,7 @@ router.post(
   "/",
   [
     protect,
-    upload.array("files", 5), // Allow up to 5 files
+    upload.array("files"),
     check("description", "Description is required").not().isEmpty(),
   ],
   createAccomplishment
@@ -60,6 +61,13 @@ router.put(
     check("description", "Description is required").not().isEmpty(),
   ],
   modifyAccomplishment
+);
+
+router.put(
+  "/:id/start",
+  protect,
+  upload.array("files", 5),
+  startAccomplishment
 );
 
 // Export accomplishments to Excel (manager only)

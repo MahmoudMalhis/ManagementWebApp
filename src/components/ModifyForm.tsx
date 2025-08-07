@@ -18,6 +18,7 @@ interface ModifyFormProps {
   oldDescription: string;
   oldFiles?: FileData[];
   onModified: () => void;
+  mode?: "modify" | "start";
 }
 
 const ModifyForm: React.FC<ModifyFormProps> = ({
@@ -25,6 +26,7 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
   oldDescription,
   oldFiles = [],
   onModified,
+  mode = "modify",
 }) => {
   const { toast } = useToast();
   const [description, setDescription] = useState(oldDescription);
@@ -68,8 +70,26 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
 
       // إضافة الملفات الجديدة فقط (القديمة موجودة مسبقًا في DB)
       newFiles.forEach((file) => formData.append("files", file));
+      console.log(
+        "Description:",
+        description,
+        "Files:",
+        files,
+        "NewFiles:",
+        newFiles
+      );
 
-      await accomplishmentsAPI.modifyAccomplishment(accomplishmentId, formData);
+      if (mode === "start") {
+        await accomplishmentsAPI.startAccomplishment(
+          accomplishmentId,
+          formData
+        );
+      } else {
+        await accomplishmentsAPI.modifyAccomplishment(
+          accomplishmentId,
+          formData
+        );
+      }
 
       toast({ title: "تم التعديل بنجاح" });
       onModified();

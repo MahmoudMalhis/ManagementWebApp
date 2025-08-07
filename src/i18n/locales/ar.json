@@ -53,7 +53,9 @@
     "applyFilter": "تطبيق التصفية",
     "clearFilter": "مسح التصفية",
     "export": "تصدير إلى إكسل",
-    "reply": "رد"
+    "reply": "رد",
+    "reviewedSuccess": "تمت المراجعة بنجاح",
+    "modificationRequested": "تم طلب التعديل"
   },
   "employees": {
     "title": "الموظفين",

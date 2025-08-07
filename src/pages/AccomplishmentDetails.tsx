@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { accomplishmentsAPI } from "@/api/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocket } from "@/contexts/SocketContext";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ import {
   LucideFileCheck,
   LucideFileClock,
   LucideCheck,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import ModifyForm from "@/components/ModifyForm";
 import AccomplishmentVersionBlock from "@/components/accomplishment/AccomplishmentVersionBlock";
@@ -25,7 +27,6 @@ const AccomplishmentDetails = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, isManager } = useAuth();
-  const { toast } = useToast();
   const { sendAccomplishmentReviewed, sendNewComment } = useSocket();
 
   const [accomplishment, setAccomplishment] = useState<any>(null);
@@ -43,6 +44,7 @@ const AccomplishmentDetails = () => {
   const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
   const [folderName, setFolderName] = useState("__NEW__");
   const [newFolderName, setNewFolderName] = useState("");
+  const [showStartForm, setShowStartForm] = useState(false);
 
   const fetchAccomplishment = async () => {
     try {
@@ -69,17 +71,18 @@ const AccomplishmentDetails = () => {
       await accomplishmentsAPI.reviewAccomplishment(id!, status);
       await fetchAccomplishment();
       sendAccomplishmentReviewed(id!, accomplishment!.employee._id);
-      toast({
-        title: t("common.success"),
-        description:
-          t("accomplishments.review") + " " + t("common.success").toLowerCase(),
-      });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: t("common.error"),
-        description: err.message || t("common.error"),
-      });
+      if (status === "reviewed") {
+        toast(t("common.success"), {
+          icon: <CheckCircle color="green" />,
+          description: t("accomplishments.reviewedSuccess"), // استخدم نص مخصص لو عندك
+        });
+      } else if (status === "needs_modification") {
+        toast(t("accomplishments.needsModification"), {
+          icon: <AlertTriangle color="red" />,
+
+          description: t("accomplishments.modificationRequested"),
+        });
+      }
     } finally {
       setReviewing(false);
     }
@@ -132,19 +135,18 @@ const AccomplishmentDetails = () => {
       );
       setAccomplishment(response.data);
       setCommentText((prev) => ({ ...prev, [versionIndex]: "" })); // امسح النص فقط للنسخة هذه
-      toast({
-        title: t("common.success"),
-        description:
-          t("accomplishments.addComment") +
-          " " +
-          t("common.success").toLowerCase(),
-      });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: t("common.error"),
-        description: err.message || t("common.error"),
-      });
+      try {
+        toast(t("common.success"), {
+          description:
+            t("accomplishments.addComment") +
+            " " +
+            t("common.success").toLowerCase(),
+        });
+      } catch (err) {
+        toast(t("common.error"), {
+          description: err.message || t("common.error"),
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -164,17 +166,18 @@ const AccomplishmentDetails = () => {
       setAccomplishment(response.data);
       setReplyText("");
       setReplyTo(null);
-      toast({
-        title: t("common.success"),
-        description:
-          t("accomplishments.reply") + " " + t("common.success").toLowerCase(),
-      });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: t("common.error"),
-        description: err.message || t("common.error"),
-      });
+      try {
+        toast(t("common.success"), {
+          description:
+            t("accomplishments.reply") +
+            " " +
+            t("common.success").toLowerCase(),
+        });
+      } catch (err) {
+        toast(t("common.error"), {
+          description: err.message || t("common.error"),
+        });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -284,28 +287,43 @@ const AccomplishmentDetails = () => {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* وصف وملفات المدير الأصلية */}
+          {accomplishment.originalDescription && (
+            <Card className="mb-4 p-4 border border-blue-200 bg-blue-50">
+              <div className="font-bold mb-2 text-blue-800">
+                وصف المدير الأصلي:
+              </div>
+              <div className="mb-3">{accomplishment.originalDescription}</div>
+              {accomplishment.originalFiles?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {accomplishment.originalFiles.map((file, idx) => (
+                    <a
+                      href={file.filePath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      key={idx}
+                    >
+                      <img
+                        src={file.filePath}
+                        alt=""
+                        className="h-32 w-32 rounded-2xl"
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
           {/* جميع الإصدارات */}
-          {displayVersions.map((version, idx) => {
-            const originalIdx = versions.length - 1 - idx;
-            return (
-              <AccomplishmentVersionBlock
-                key={version._id + version.modifiedAt}
-                version={version}
-                sectionComments={accomplishment.comments
-                  .filter(
-                    (c) =>
-                      !c.isReply &&
-                      (c.versionIndex === originalIdx ||
-                        (originalIdx === versions.length - 1 &&
-                          c.versionIndex === undefined))
-                  )
-                  .sort(
-                    (a, b) =>
-                      new Date(a.createdAt).getTime() -
-                      new Date(b.createdAt).getTime()
-                  )}
-                sectionReplies={allReplies.filter((reply) =>
-                  accomplishment.comments
+          {accomplishment.status !== "assigned" &&
+            displayVersions.map((version, idx) => {
+              const originalIdx = versions.length - 1 - idx;
+              return (
+                <AccomplishmentVersionBlock
+                  key={version._id + version.modifiedAt}
+                  version={version}
+                  sectionComments={accomplishment.comments
                     .filter(
                       (c) =>
                         !c.isReply &&
@@ -313,73 +331,111 @@ const AccomplishmentDetails = () => {
                           (originalIdx === versions.length - 1 &&
                             c.versionIndex === undefined))
                     )
-                    .some((comment) => comment._id === reply.replyTo)
-                )}
-                idx={idx}
-                total={displayVersions.length}
-                t={t}
-                replyTo={replyTo}
-                setReplyTo={setReplyTo}
-                replyText={replyText}
-                setReplyText={setReplyText}
-                submitting={submitting}
-                handleReplySubmit={handleReplySubmit}
-                canAddComment={
-                  (user?._id === accomplishment.employee._id || isManager) &&
-                  originalIdx === versions.length - 1
-                }
-                commentText={commentText}
-                setCommentText={setCommentText}
-                handleAddComment={(e) => handleAddComment(e, idx)}
-                canReply={canCurrentUserReply}
-                accomplishmentStatus={accomplishment.status}
+                    .sort(
+                      (a, b) =>
+                        new Date(a.createdAt).getTime() -
+                        new Date(b.createdAt).getTime()
+                    )}
+                  sectionReplies={allReplies.filter((reply) =>
+                    accomplishment.comments
+                      .filter(
+                        (c) =>
+                          !c.isReply &&
+                          (c.versionIndex === originalIdx ||
+                            (originalIdx === versions.length - 1 &&
+                              c.versionIndex === undefined))
+                      )
+                      .some((comment) => comment._id === reply.replyTo)
+                  )}
+                  idx={idx}
+                  total={displayVersions.length}
+                  t={t}
+                  replyTo={replyTo}
+                  setReplyTo={setReplyTo}
+                  replyText={replyText}
+                  setReplyText={setReplyText}
+                  submitting={submitting}
+                  handleReplySubmit={handleReplySubmit}
+                  canAddComment={
+                    (user?._id === accomplishment.employee._id || isManager) &&
+                    originalIdx === versions.length - 1
+                  }
+                  commentText={commentText}
+                  setCommentText={setCommentText}
+                  handleAddComment={(e) => handleAddComment(e, idx)}
+                  canReply={canCurrentUserReply}
+                  accomplishmentStatus={accomplishment.status}
+                />
+              );
+            })}
+
+          {accomplishment.status === "assigned" &&
+            user?._id === accomplishment.employee._id &&
+            (!showStartForm ? (
+              <Button
+                className="mt-4 glass-btn"
+                onClick={() => setShowStartForm(true)}
+              >
+                بدء المهمة
+              </Button>
+            ) : (
+              <ModifyForm
+                accomplishmentId={accomplishment._id}
+                oldDescription="" // يبدأ فارغاً لأن وصف المدير سيظهر في النسخ السابقة
+                oldFiles={[]} // يبدأ فارغاً
+                onModified={async () => {
+                  setShowStartForm(false);
+                  await fetchAccomplishment();
+                }}
+                mode="start"
               />
-            );
-          })}
+            ))}
 
           {/* أزرار المراجعة (فقط للمدير) */}
-          <div className="flex justify-between">
-            {isManager && accomplishment.status !== "reviewed" && (
-              <div className="flex justify-end gap-2">
+          {accomplishment.status !== "assigned" && (
+            <div className="flex justify-between">
+              {isManager && accomplishment.status !== "reviewed" && (
+                <div className="flex justify-end gap-2">
+                  <Button
+                    onClick={() => handleReviewAccomplishment("reviewed")}
+                    disabled={reviewing}
+                    className="flex items-center gap-2 glass-btn"
+                  >
+                    {reviewing ? (
+                      <LucideLoader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <LucideCheck className="h-4 w-4" />
+                    )}
+                    {t("accomplishments.review")}
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      handleReviewAccomplishment("needs_modification")
+                    }
+                    variant="outline"
+                    disabled={reviewing}
+                    className="flex items-center gap-2 glass-btn"
+                  >
+                    {reviewing ? (
+                      <LucideLoader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <LucideCheck className="h-4 w-4" />
+                    )}
+                    {t("accomplishments.needsModification")}
+                  </Button>
+                </div>
+              )}
+              {isManager && allFiles.length !== 0 && (
                 <Button
-                  onClick={() => handleReviewAccomplishment("reviewed")}
-                  disabled={reviewing}
-                  className="flex items-center gap-2 glass-btn"
-                >
-                  {reviewing ? (
-                    <LucideLoader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <LucideCheck className="h-4 w-4" />
-                  )}
-                  {t("accomplishments.review")}
-                </Button>
-                <Button
-                  onClick={() =>
-                    handleReviewAccomplishment("needs_modification")
-                  }
+                  onClick={openGalleryPopup}
                   variant="outline"
-                  disabled={reviewing}
                   className="flex items-center gap-2 glass-btn"
                 >
-                  {reviewing ? (
-                    <LucideLoader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <LucideCheck className="h-4 w-4" />
-                  )}
-                  {t("accomplishments.needsModification")}
+                  اضافة الى المعرض
                 </Button>
-              </div>
-            )}
-            {allFiles.length !== 0 && (
-              <Button
-                onClick={openGalleryPopup}
-                variant="outline"
-                className="flex items-center gap-2 glass-btn"
-              >
-                اضافة الى المعرض
-              </Button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
           {/* زر تعديل الإنجاز */}
           {accomplishment.status === "needs_modification" &&
             user?._id === accomplishment.employee._id && (

@@ -74,9 +74,9 @@ body {
 }
 
 .glass-btn {
-  background: rgba(255, 255, 255, 0.17) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   border-radius: 0.85rem !important;
-  border: 1.1px solid rgba(220, 230, 255, 0.18);
+  border: 1.1px solid rgba(220, 230, 255, 0.5);
   box-shadow: 0 2px 9px 0 rgba(120, 156, 222, 0.08);
   color: #2d466d !important;
   backdrop-filter: blur(7px);
@@ -97,7 +97,7 @@ body {
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.13) !important;
+  background: rgba(255, 255, 255, 1) !important;
   border-radius: 0.7rem !important;
   border: 1.1px solid rgba(170, 200, 240, 0.14);
   box-shadow: 0 1px 6px 0 rgba(100, 150, 200, 0.04);

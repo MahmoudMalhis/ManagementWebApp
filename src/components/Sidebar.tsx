@@ -14,7 +14,6 @@ import {
   LucideBell,
 } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationsContext";
-import { useEffect } from "react";
 
 interface SidebarProps {
   open: boolean;
@@ -25,7 +24,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
   const { t } = useTranslation();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { unreadCount, notifications } = useNotifications();
+  const { unreadCount } = useNotifications();
 
   const navigationItems = [
     {
@@ -63,17 +62,13 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
       path: "/notifications",
       icon: LucideBell,
       roles: ["manager", "employee"],
+      badge: true,
     },
   ];
 
   const filteredNavItems = navigationItems.filter((item) =>
     item.roles.includes(user?.role || "")
   );
-
-  useEffect(() => {
-    console.log("notifications updated!", notifications);
-    console.log("unreadCount:", unreadCount);
-  }, [notifications]);
 
   return (
     <>
@@ -122,25 +117,25 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
           <ul className="space-y-1">
             {filteredNavItems.map((item) => (
-              <li key={item.path} onClick={onClose}>
+              <li key={item.path} className="relative">
                 <Link
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all glass-nav-link relative", // أضفت relative هنا
+                    "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all glass-nav-link",
                     location.pathname.startsWith(item.path)
                       ? "glass-nav-link-active"
                       : "hover:bg-white/25"
                   )}
+                  onClick={onClose}
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.name}</span>
+                  {item.badge && unreadCount > 0 && (
+                    <span className="absolute right-0 -top-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Link>
-                {/* نقلت العداد هنا وجعلته مطلقًا بالنسبة لـ li */}
-                {item.path === "/notifications" && unreadCount > 0 && (
-                  <span className="absolute top-[270px] right-4 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
               </li>
             ))}
           </ul>

@@ -170,6 +170,16 @@ reviewAccomplishment: async (id: string, status: string) => {
   }
 },
 
+startAccomplishment: async (id: string, formData: FormData) => {
+  const response = await api.put(`/accomplishments/${id}/start`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
+  return response.data;
+},
+
+
 };
 
 // Task Titles API calls

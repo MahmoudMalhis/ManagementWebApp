@@ -44,6 +44,13 @@ exports.createAccomplishment = async (req, res) => {
       taskTitle,
       employee: employeeId,
       files,
+      status: req.user.role === "manager" ? "assigned" : "pending",
+      originalDescription:
+        req.user.role === "manager" ? description : undefined,
+      originalFiles: req.user.role === "manager" ? files : [],
+      employeeDescription:
+        req.user.role === "employee" ? description : undefined,
+      employeeFiles: req.user.role === "employee" ? files : [],
     });
 
     // جلب اسم عنوان المهمة (اختياري للرسالة)
@@ -281,6 +288,60 @@ exports.addComment = async (req, res) => {
   }
 };
 
+// @route PUT /api/accomplishments/:id/start
+// @access Private/Employee
+exports.startAccomplishment = async (req, res) => {
+  const accomplishment = await Accomplishment.findById(req.params.id);
+  if (!accomplishment)
+    return res.status(404).json({ message: "Accomplishment not found" });
+
+  if (accomplishment.employee.toString() !== req.user.id)
+    return res.status(403).json({ message: "Not authorized" });
+
+  // فقط إذا لم يبدأها الموظف بعد
+  if (accomplishment.status !== "assigned")
+    return res.status(400).json({ message: "Task already started" });
+
+  // حفظ وصف الموظف في حقل منفصل (اختياري)
+  accomplishment.employeeDescription = req.body.description;
+  // أضف ملفات الموظف فقط في حقل منفصل
+  accomplishment.employeeFiles =
+    req.files?.map((f) => ({
+      fileName: f.originalname,
+      filePath: `/uploads/${f.filename}`,
+      fileType: f.mimetype,
+    })) || [];
+  // اجمع كل الملفات (أصلي + موظف)
+  accomplishment.files = [...accomplishment.employeeFiles];
+  accomplishment.description = accomplishment.employeeDescription;
+  accomplishment.status = "pending";
+  accomplishment.lastContentModifiedAt = Date.now();
+  await accomplishment.save();
+
+  const managers = await User.find({ role: "manager" });
+  for (const manager of managers) {
+    await Notification.create({
+      user: manager._id,
+      type: "accomplishment_started",
+      message: `قام الموظف ${req.user.name} ببدء العمل على المهمة "${accomplishment.description}"`,
+      data: { accomplishmentId: accomplishment._id },
+    });
+
+    if (io) {
+      io.to(manager._id.toString()).emit("notification", {
+        type: "accomplishment_started",
+        message: `قام الموظف ${req.user.name} بعمل على المهمة "${accomplishment.description}"`,
+        data: { accomplishmentId: accomplishment._id },
+      });
+    }
+  }
+
+  const updatedAccomplishment = await Accomplishment.findById(req.params.id)
+    .populate("employee", "name email")
+    .populate("comments.commentedBy", "name role");
+  res.json({ success: true, data: updatedAccomplishment });
+};
+
 // @desc    Add employee reply to comment
 // @route   POST /api/accomplishments/:id/comments/:commentId/reply
 // @access  Private
@@ -467,6 +528,40 @@ exports.reviewAccomplishment = async (req, res) => {
     }
 
     await accomplishment.save();
+
+    if (status === "reviewed") {
+      await Notification.create({
+        user: accomplishment.employee,
+        type: "reviewed",
+        message: "تم اعتماد إنجازك من قبل المدير",
+        data: { accomplishmentId: accomplishment._id },
+      });
+      if (io) {
+        io.to(accomplishment.employee.toString()).emit("notification", {
+          type: "reviewed",
+          message: "تم اعتماد إنجازك من قبل المدير",
+          data: { accomplishmentId: accomplishment._id },
+        });
+      }
+    }
+
+    if (status === "needs_modification") {
+      // إشعار الموظف في قاعدة البيانات
+      await Notification.create({
+        user: accomplishment.employee,
+        type: "modification_request",
+        message: "تم طلب تعديل على مهمتك",
+        data: { accomplishmentId: accomplishment._id },
+      });
+      // إشعار socket.io لو كان متصل
+      if (io) {
+        io.to(accomplishment.employee.toString()).emit("notification", {
+          type: "modification_request",
+          message: "تم طلب تعديل على مهمتك",
+          data: { accomplishmentId: accomplishment._id },
+        });
+      }
+    }
 
     const updatedAccomplishment = await Accomplishment.findById(req.params.id)
       .populate("employee", "name email")
