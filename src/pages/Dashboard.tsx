@@ -88,9 +88,7 @@ const Dashboard = () => {
         });
       } catch (err) {
         setError(
-          err instanceof Error && err.message
-            ? err.message
-            : "Failed to load dashboard data"
+          err instanceof Error && err.message ? err.message : t("common.error")
         );
       } finally {
         setLoading(false);
@@ -331,7 +329,7 @@ const Dashboard = () => {
                     </span>
                     {isManager && (
                       <span className="capitalize font-bold">
-                        {accomplishment.employee.name}
+                        {accomplishment.employee?.name}
                       </span>
                     )}
                   </CardTitle>

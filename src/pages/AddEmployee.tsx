@@ -2,25 +2,25 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { authAPI } from "@/api/api";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+// Use FormCard wrapper for consistent form layout
+import FormCard from "@/components/FormCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LucideArrowLeft, LucideLoader, LucideUserPlus } from "lucide-react";
+import {
+  LucideArrowLeft,
+  LucideUserPlus,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
+import FormActions from "@/components/FormActions";
 
 const AddEmployee = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // use the toast function from sonner
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,7 +50,7 @@ const AddEmployee = () => {
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("employees.passwordMinLength"));
       return;
     }
 
@@ -60,20 +60,20 @@ const AddEmployee = () => {
 
       await authAPI.registerEmployee(formData.name, formData.password);
 
-      toast({
-        title: t("common.success"),
+      // Show success notification
+      toast(t("common.success"), {
+        icon: <CheckCircle color="green" />, 
         description:
           t("employees.add") + " " + t("common.success").toLowerCase(),
       });
 
       navigate("/employees");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error registering employee:", err);
       setError(err.message || t("common.error"));
 
-      toast({
-        variant: "destructive",
-        title: t("common.error"),
+      toast(t("common.error"), {
+        icon: <AlertTriangle color="red" />,
         description: err.message || t("common.error"),
       });
     } finally {
@@ -92,98 +92,73 @@ const AddEmployee = () => {
         {t("common.back")}
       </Button>
 
-      <Card className="glass-card border-none">
-        <CardHeader>
-          <CardTitle className="glassy-text">{t("employees.add")}</CardTitle>
-          <CardDescription className="glassy-text">
-            {t("employees.create")}
-          </CardDescription>
-        </CardHeader>
-
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive" className="glass-card">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="name" className="glassy-text">
-                {t("employees.name")}
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder={t("employees.name")}
-                required
-                className="glass-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="glassy-text">
-                {t("employees.password")}
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="••••••••"
-                required
-                className="glass-input"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="glassy-text">
-                {t("employees.confirmPassword")}
-              </Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="••••••••"
-                required
-                className="glass-input"
-              />
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="glass-btn"
-              onClick={() => navigate("/employees")}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 glass-btn"
-            >
-              {loading ? (
-                <>
-                  <LucideLoader className="h-4 w-4 animate-spin" />
-                  {t("common.loading")}
-                </>
-              ) : (
-                <>
-                  <LucideUserPlus className="h-4 w-4" />
-                  {t("employees.create")}
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+      {/* Wrap the form around the FormCard so submit works */}
+      <form onSubmit={handleSubmit}>
+        <FormCard
+          title={t("employees.add")}
+          description={t("employees.create")}
+          footer={
+            <FormActions
+              loading={loading}
+              cancelLabel={t("common.cancel")}
+              submitLabel={t("employees.create")}
+              loadingLabel={t("common.loading")}
+              onCancel={() => navigate("/employees")}
+              submitIcon={<LucideUserPlus className="h-4 w-4" />}
+            />
+          }
+        >
+          {error && (
+            <Alert variant="destructive" className="glass-card">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="name" className="glassy-text">
+              {t("employees.name")}
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder={t("employees.name")}
+              required
+              className="glass-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="glassy-text">
+              {t("employees.password")}
+            </Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              required
+              className="glass-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword" className="glassy-text">
+              {t("employees.confirmPassword")}
+            </Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              required
+              className="glass-input"
+            />
+          </div>
+        </FormCard>
+      </form>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
+const Accomplishment = require("../models/Accomplishment");
+const Notification = require("../models/Notification");
 
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -45,7 +47,14 @@ exports.login = async (req, res) => {
           password,
           role: "manager",
         });
-        // سجل دخوله مباشرةً
+
+        if (user.status === "archived" || user.disabledLogin) {
+          return res.status(403).json({
+            success: false,
+            message: "Account is archived/disabled",
+          });
+        }
+
         return sendTokenResponse(user, 200, res);
       } else {
         // يوجد مدير بالنظام، لا تنشئ حساب جديد!
@@ -56,7 +65,15 @@ exports.login = async (req, res) => {
       }
     }
 
-    // Check if password matches
+    // التحقق من حالة الحساب للمستخدم الموجود
+    if (user.status === "archived" || user.disabledLogin) {
+      return res.status(403).json({
+        success: false,
+        message: "Account is archived/disabled",
+      });
+    }
+
+    // التحقق من كلمة المرور للمستخدم الموجود
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -66,13 +83,13 @@ exports.login = async (req, res) => {
       });
     }
 
+    // إذا كل شيء صحيح، إرجاع الرد الناجح
     sendTokenResponse(user, 200, res);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
 // @desc    Register user (only for manager to create employee accounts)
 // @route   POST /api/auth/register
 // @access  Private/Manager
@@ -142,9 +159,15 @@ exports.getMe = async (req, res) => {
 // @desc    Get all employees (for manager)
 // @route   GET /api/auth/employees
 // @access  Private/Manager
+// controllers/authController.js
 exports.getEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: "employee" })
+    const { status } = req.query; // optional: 'active' | 'archived'
+    const filter = { role: "employee" };
+    if (status === "archived") filter.status = "archived";
+    if (status === "active") filter.status = "active";
+
+    const employees = await User.find(filter)
       .select("-password")
       .sort({ createdAt: -1 });
 
@@ -188,6 +211,89 @@ exports.getEmployeeById = async (req, res) => {
     });
   } catch (err) {
     console.error(err.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// @desc    Delete employee (manager only)
+// @route   DELETE /api/auth/employees/:id
+// @access  Private/Manager
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mode = (req.query.mode || "archive").toLowerCase(); // 'hard' | 'archive'
+
+    const user = await User.findById(id);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (user.role !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "Only employees can be deleted/archived",
+      });
+    }
+
+    if (mode === "hard") {
+      // حذف كل ما يتعلق بالموظف ثم حذف الحساب
+      await Promise.all([
+        Accomplishment.deleteMany({ employee: id }),
+        Notification.deleteMany({ user: id }),
+      ]);
+      await User.deleteOne({ _id: id });
+      return res.json({
+        success: true,
+        message: "Employee and related data deleted",
+      });
+    }
+
+    // archive (الإفتراضي): إبقاء البيانات وتعطيل الدخول
+    user.status = "archived";
+    user.disabledLogin = true;
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Employee archived",
+      data: { id: user._id },
+    });
+  } catch (err) {
+    console.error("deleteEmployee error:", err);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// controllers/authController.js
+exports.unarchiveEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const emp = await User.findById(id);
+    if (!emp)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (emp.role !== "employee")
+      return res
+        .status(400)
+        .json({ success: false, message: "Only employees can be unarchived" });
+
+    emp.status = "active";
+    emp.disabledLogin = false;
+    await emp.save();
+
+    res.json({
+      success: true,
+      message: "Employee restored",
+      data: {
+        id: emp._id,
+        name: emp.name,
+        role: emp.role,
+        status: emp.status,
+      },
+    });
+  } catch (err) {
+    console.error("unarchiveEmployee error:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };

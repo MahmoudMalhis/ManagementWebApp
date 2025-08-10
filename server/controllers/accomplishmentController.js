@@ -162,15 +162,22 @@ exports.getAccomplishments = async (req, res) => {
     }
 
     const accomplishments = await Accomplishment.find(query)
-      .populate("employee", "name")
+      .populate("employee", "name status")
       .populate("comments.commentedBy", "name role")
       .populate("taskTitle", "name")
       .sort({ createdAt: -1 });
 
+    const filtered =
+      req.user.role === "manager" && !req.query.employee
+        ? accomplishments.filter(
+            (acc) => acc.employee && acc.employee.status !== "archived"
+          )
+        : accomplishments;
+
     res.json({
       success: true,
-      count: accomplishments.length,
-      data: accomplishments,
+      count: filtered.length,
+      data: filtered,
     });
   } catch (err) {
     console.error(err.message);

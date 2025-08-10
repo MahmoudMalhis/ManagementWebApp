@@ -23,6 +23,8 @@ import GalleryPage from "./pages/Gallery";
 import AdminTaskTitles from "./pages/AdminTaskTitles";
 import NotificationsPage from "./pages/NotificationsPage";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import ArchivedEmployees from "./pages/ArchivedEmployees";
+import SavedComparisonsPage from "./pages/SavedComparisonsPage";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +112,23 @@ const AppContent = () => {
             element={
               <ProtectedRoute requiredRole="manager">
                 <CompareEmployees />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="employees/archived"
+            element={
+              <ProtectedRoute requiredRole="manager">
+                <ArchivedEmployees />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/comparisons"
+            element={
+              <ProtectedRoute requiredRole="manager">
+                <SavedComparisonsPage />
               </ProtectedRoute>
             }
           />

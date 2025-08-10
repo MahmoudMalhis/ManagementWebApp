@@ -42,7 +42,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           onClick={toggleLanguage}
           className="glass-btn text-sm"
         >
-          {i18n.language === "ar" ? "English" : "العربية"}
+          {i18n.language === "ar" ? t("common.english") : t("common.arabic")}
         </Button>
 
         {/* User info on larger screens */}

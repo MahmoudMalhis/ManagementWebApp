@@ -26,7 +26,8 @@
     "todayTasks": "مهام اليوم",
     "recentAccomplishments": "المهمات الأخيرة",
     "pendingReviews": "مراجعات معلقة",
-    "totalEmployees": "إجمالي الموظفين"
+    "totalEmployees": "إجمالي الموظفين",
+    "currentMonth": "الشهر الحالي"
   },
   "accomplishments": {
     "title": "المهمات",
@@ -37,8 +38,8 @@
     "uploadFiles": "تحميل الملفات",
     "submit": "إرسال",
     "review": "تم",
-    "reviewed": "جاهز",
-    "notReviewed": "معلق",
+    "reviewed": "جاهزة",
+    "notReviewed": "معلقة",
     "needsModification": "تعديل",
     "addComment": "إضافة تعليق",
     "comment": "تعليق",
@@ -53,9 +54,15 @@
     "applyFilter": "تطبيق التصفية",
     "clearFilter": "مسح التصفية",
     "export": "تصدير إلى إكسل",
+    "selectTaskTitle": "اختر عنوان المهمة",
     "reply": "رد",
     "reviewedSuccess": "تمت المراجعة بنجاح",
-    "modificationRequested": "تم طلب التعديل"
+    "modificationRequested": "تم طلب التعديل",
+    "loadFailed": "تعذر تحميل الإنجازات",
+    "exportFailed": "تعذر تصدير الإنجازات",
+    "exporting": "جاري التصدير...",
+    "startTask": "بدء المهمة",
+    "originalManagerDescription": "وصف المدير الأصلي:"
   },
   "employees": {
     "title": "الموظفين",
@@ -70,7 +77,12 @@
     "select": "اختر الموظف",
     "compareSelected": "مقارنة المحدد",
     "noEmployees": "لم يتم العثور على موظفين",
-    "employeesSelected": "تم تحديد {{count}} موظفين"
+    "employeesSelected": "تم تحديد {{count}} موظفين",
+    "passwordMinLength": "يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل",
+    "loadFailed": "تعذر تحميل الموظفين",
+    "roleEmployee": "موظف",
+    "roleManager": "مدير",
+    "addTask": "إضافة مهمة"
   },
   "notifications": {
     "newAccomplishment": "تم تقديم إنجاز جديد بواسطة {{name}}",
@@ -87,6 +99,52 @@
     "edit": "تعديل",
     "view": "عرض",
     "back": "رجوع",
-    "actions": "إجراءات"
+    "actions": "إجراءات",
+    "manager": "مدير",
+    "employee": "موظف",
+    "english": "English",
+    "arabic": "العربية",
+    "selectEmployee": "اختر الموظف",
+    "selectEmployeeRequired": "يجب اختيار الموظف",
+    "selectTaskTitle": "اختر عنوان المهمة",
+    "enterNewDescription": "أدخل الوصف الجديد",
+    "updating": "جاري التعديل...",
+    "saveChanges": "حفظ التعديلات",
+    "editedSuccessfully": "تم التعديل بنجاح",
+    "chooseOption": "اختر...",
+    "done": "تم"
+  },
+  "taskTitles": {
+    "manage": "إدارة أنواع عناوين المهمات",
+    "newPlaceholder": "أدخل عنوان جديد",
+    "add": "إضافة",
+    "duplicateError": "العنوان مكرر أو هناك خطأ",
+    "deleteConfirm": "تأكيد حذف العنوان؟",
+    "deleteError": "خطأ بالحذف",
+    "noAccess": "ليس لديك صلاحية الوصول لهذه الصفحة",
+    "noTitles": "لا يوجد عناوين",
+    "loadFailed": "تعذر تحميل الأنواع"
+  },
+  "gallery": {
+    "title": "معرض أعمالنا",
+    "search": "ابحث عن مجلد...",
+    "fileCount": "{{count}} ملف/صورة",
+    "back": "رجوع",
+    "addToGallery": "اضافة الى المعرض",
+    "selectFiles": "اختر الملفات للمعرض",
+    "selectFolder": "اختر مجلد",
+    "newFolder": "مجلد جديد",
+    "newFolderName": "اسم المجلد الجديد",
+    "addedToGallery": "تمت الإضافة للمعرض!"
+  },
+  "notificationsPage": {
+    "title": "الإشعارات",
+    "markAllRead": "تعليم الكل كمقروء",
+    "noNotifications": "لا يوجد إشعارات حتى الآن.",
+    "newTask": "مهمة جديدة",
+    "newComment": "تعليق جديد",
+    "newReply": "رد جديد",
+    "notification": "إشعار",
+    "viewAccomplishment": "عرض المهمة"
   }
 }

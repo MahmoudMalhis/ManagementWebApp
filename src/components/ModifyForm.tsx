@@ -2,16 +2,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 import { accomplishmentsAPI } from "@/api/api";
-
-interface FileData {
-  _id?: string; // موجود للملفات القديمة من قاعدة البيانات
-  fileName: string;
-  filePath?: string; // مسار الملف إذا كان قديم
-  fileType?: string;
-  file?: File; // موجود للملفات الجديدة من input
-}
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { CheckCircle, AlertTriangle, LucideLoader } from "lucide-react";
+// Reuse the unified FileData type from the shared FileUpload component
+import FileUpload, { FileData } from "@/components/FileUpload";
 
 interface ModifyFormProps {
   accomplishmentId: string;
@@ -28,37 +24,13 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
   onModified,
   mode = "modify",
 }) => {
-  const { toast } = useToast();
+  // translation hook for dynamic labels
+  const { t } = useTranslation();
   const [description, setDescription] = useState(oldDescription);
   const [files, setFiles] = useState<FileData[]>(oldFiles);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // إضافة ملفات جديدة بدون حذف القديمة
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      const mappedFiles = selectedFiles.map((file) => ({
-        fileName: file.name,
-        file,
-      }));
-      setFiles((prev) => [...prev, ...mappedFiles]);
-      setNewFiles((prev) => [...prev, ...selectedFiles]);
-    }
-  };
-
-  // حذف أي ملف (قديم أو جديد) من القائمة
-  const handleRemoveFile = (index: number) => {
-    const fileToRemove = files[index];
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-
-    // إذا الملف كان جديد (من input)، نحذفه من newFiles أيضًا
-    if (fileToRemove.file) {
-      setNewFiles((prev) =>
-        prev.filter((f) => f.name !== fileToRemove.fileName)
-      );
-    }
-  };
+  // Note: File selection and removal are now handled by the shared
+  // FileUpload component. We no longer need separate handlers here.
 
   // إرسال البيانات للسيرفر
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,17 +39,18 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
       setLoading(true);
       const formData = new FormData();
       formData.append("description", description);
+      // Append only the newly uploaded files to the form data. We
+      // identify new files by the presence of the `file` property on
+      // each FileData item. Existing files from the DB do not have
+      // `file`, so they will not be reuploaded.
+      const newFilesForUpload = files.filter((f) => f.file);
+      newFilesForUpload.forEach((f) => {
+        if (f.file) {
+          formData.append("files", f.file);
+        }
+      });
 
-      // إضافة الملفات الجديدة فقط (القديمة موجودة مسبقًا في DB)
-      newFiles.forEach((file) => formData.append("files", file));
-      console.log(
-        "Description:",
-        description,
-        "Files:",
-        files,
-        "NewFiles:",
-        newFiles
-      );
+      console.log("Description:", description, "Files:", files);
 
       if (mode === "start") {
         await accomplishmentsAPI.startAccomplishment(
@@ -90,13 +63,14 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
           formData
         );
       }
-
-      toast({ title: "تم التعديل بنجاح" });
+      // success toast
+      toast(t("common.editedSuccessfully"), {
+        icon: <CheckCircle color="green" />,
+      });
       onModified();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "حدث خطأ",
+      toast(t("common.error"), {
+        icon: <AlertTriangle color="red" />,
         description: error.message,
       });
     } finally {
@@ -113,63 +87,23 @@ const ModifyForm: React.FC<ModifyFormProps> = ({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         rows={3}
-        placeholder="أدخل الوصف الجديد"
+        placeholder={t("common.enterNewDescription")}
         className="glass-input"
       />
 
-      <div className="mt-3 grid md:grid-cols-4 gap-3">
-        {files.map((file, index) => {
-          const isImage =
-            file.fileType?.startsWith("image") ||
-            file.file?.type?.startsWith("image");
-
-          const src = file.file // ملف جديد
-            ? URL.createObjectURL(file.file)
-            : file.filePath // ملف قديم
-            ? `http://localhost:5000${file.filePath}`
-            : "";
-
-          return (
-            <div
-              key={index}
-              className="relative glass-card p-2 flex flex-col items-center gap-2 border-none"
-              style={{ minHeight: "120px", minWidth: "110px" }}
-            >
-              {isImage ? (
-                <img
-                  src={src}
-                  alt={file.fileName}
-                  className="w-24 h-24 object-cover rounded-xl glass-img"
-                />
-              ) : (
-                <span className="text-xs text-center break-all glassy-text mt-4">
-                  {file.fileName}
-                </span>
-              )}
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={() => handleRemoveFile(index)}
-                className="glass-btn"
-              >
-                حذف
-              </Button>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* اختيار ملفات جديدة */}
-      <input
-        type="file"
-        multiple
-        onChange={handleFileChange}
-        className="block w-full glass-input mt-3"
-      />
+      {/* File upload section: uses the shared FileUpload component to
+          encapsulate preview, selection and removal of files */}
+      <FileUpload files={files} setFiles={setFiles} />
 
       <Button type="submit" disabled={loading} className="glass-btn w-full">
-        {loading ? "جاري التعديل..." : "حفظ التعديلات"}
+        {loading ? (
+          <>
+            <LucideLoader className="h-4 w-4 animate-spin" />
+            {t("common.updating")}
+          </>
+        ) : (
+          t("common.saveChanges")
+        )}
       </Button>
     </form>
   );

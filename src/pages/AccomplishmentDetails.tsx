@@ -53,7 +53,7 @@ const AccomplishmentDetails = () => {
       const response = await accomplishmentsAPI.getAccomplishment(id!);
       setAccomplishment(response.data);
     } catch (err) {
-      setError(err.message || "Failed to load accomplishment details");
+      setError(err.message || t("common.error"));
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,9 @@ const AccomplishmentDetails = () => {
       folderName: folderName === "__NEW__" ? newFolderName : folderName,
     });
     setShowGalleryPopup(false);
-    alert("تمت الإضافة للمعرض!");
+    toast(t("gallery.addedToGallery"), {
+      icon: <CheckCircle color="green" />,
+    });
   };
 
   const canCurrentUserReply = (comment) => {
@@ -291,7 +293,7 @@ const AccomplishmentDetails = () => {
           {accomplishment.originalDescription && (
             <Card className="mb-4 p-4 border border-blue-200 bg-blue-50">
               <div className="font-bold mb-2 text-blue-800">
-                وصف المدير الأصلي:
+                {t("accomplishments.originalManagerDescription")}
               </div>
               <div className="mb-3">{accomplishment.originalDescription}</div>
               {accomplishment.originalFiles?.length > 0 && (
@@ -376,7 +378,7 @@ const AccomplishmentDetails = () => {
                 className="mt-4 glass-btn"
                 onClick={() => setShowStartForm(true)}
               >
-                بدء المهمة
+                {t("accomplishments.startTask")}
               </Button>
             ) : (
               <ModifyForm
@@ -431,7 +433,7 @@ const AccomplishmentDetails = () => {
                   variant="outline"
                   className="flex items-center gap-2 glass-btn"
                 >
-                  اضافة الى المعرض
+                  {t("gallery.addToGallery")}
                 </Button>
               )}
             </div>
@@ -455,7 +457,7 @@ const AccomplishmentDetails = () => {
           >
             <div className="glass-popup rounded-2xl p-6 min-w-[320px] max-w-md shadow-xl border ">
               <h2 className="mb-4 font-bold glassy-text">
-                اختر الملفات للمعرض
+                {t("gallery.selectFiles")}
               </h2>
               <div className="max-h-96 overflow-auto">
                 {(allFiles || []).map((file, i) => (
@@ -496,13 +498,17 @@ const AccomplishmentDetails = () => {
                 ))}
               </div>
               <div className="mt-4">
-                <label className="block mb-1 glassy-text">اختر مجلد:</label>
+                <label className="block mb-1 glassy-text">
+                  {t("gallery.selectFolder")}
+                </label>
                 <select
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
                   className="glass-input border p-1 w-full"
                 >
-                  <option value="__NEW__">-- مجلد جديد --</option>
+                  <option value="__NEW__">
+                    -- {t("gallery.newFolder")} --
+                  </option>
                   {(galleryFolders || []).map((f) => (
                     <option key={f._id} value={f.name}>
                       {f.name}
@@ -513,7 +519,7 @@ const AccomplishmentDetails = () => {
                   <input
                     type="text"
                     className="mt-2 glass-input border p-1 w-full"
-                    placeholder="اسم المجلد الجديد"
+                    placeholder={t("gallery.newFolderName")}
                     onChange={(e) => setNewFolderName(e.target.value)}
                   />
                 )}
@@ -524,14 +530,14 @@ const AccomplishmentDetails = () => {
                   variant="outline"
                   className="glass-btn"
                 >
-                  إلغاء
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={handleSaveToGallery}
                   disabled={selectedFiles.length === 0 || !folderName}
                   className="glass-btn"
                 >
-                  تم
+                  {t("common.done")}
                 </Button>
               </div>
             </div>

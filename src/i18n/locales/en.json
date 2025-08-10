@@ -27,6 +27,7 @@
     "recentAccomplishments": "Recent Accomplishments",
     "pendingReviews": "Pending Reviews",
     "totalEmployees": "Total Employees"
+    ,"currentMonth": "Current month"
   },
   "accomplishments": {
     "title": "Accomplishments",
@@ -52,8 +53,16 @@
     "applyFilter": "Apply Filter",
     "clearFilter": "Clear Filter",
     "export": "Export to Excel",
+    "selectTaskTitle": "Select task title",
+    "reviewedSuccess": "Reviewed successfully",
+    "modificationRequested": "Modification requested",
     "needsModification": "Needs modification",
     "reply": "reply"
+    ,"loadFailed": "Failed to load accomplishments"
+    ,"exportFailed": "Failed to export accomplishments"
+    ,"exporting": "Exporting..."
+    ,"startTask": "Start Task"
+    ,"originalManagerDescription": "Original manager description:"
   },
   "employees": {
     "title": "Employees",
@@ -68,7 +77,12 @@
     "select": "Select Employees to Compare",
     "compareSelected": "Compare Selected",
     "noEmployees": "No employees found",
-    "employeesSelected": "{{count}} employees selected"
+    "employeesSelected": "{{count}} employees selected",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "loadFailed": "Failed to load employees",
+    "roleEmployee": "Employee",
+    "roleManager": "Manager",
+    "addTask": "Add Accomplishment"
   },
   "notifications": {
     "newAccomplishment": "New accomplishment submitted by {{name}}",
@@ -85,6 +99,52 @@
     "edit": "Edit",
     "view": "View",
     "back": "Back",
-    "actions": "Actions"
+    "actions": "Actions",
+    "manager": "Manager",
+    "employee": "Employee",
+    "english": "English",
+    "arabic": "Arabic",
+    "selectEmployee": "Select employee",
+    "selectEmployeeRequired": "Employee selection is required",
+    "selectTaskTitle": "Select task title",
+    "enterNewDescription": "Enter new description",
+    "updating": "Updating...",
+    "saveChanges": "Save changes",
+    "editedSuccessfully": "Edited successfully",
+    "chooseOption": "Choose...",
+    "done": "Done"
+  }
+  ,"taskTitles": {
+    "manage": "Manage Task Title Types",
+    "newPlaceholder": "Enter a new title",
+    "add": "Add",
+    "duplicateError": "The title is duplicate or there's an error",
+    "deleteConfirm": "Confirm deleting the title?",
+    "deleteError": "Deletion error",
+    "noAccess": "You do not have permission to access this page",
+    "noTitles": "No titles"
+    ,"loadFailed": "Failed to load titles"
+  },
+  "gallery": {
+    "title": "Our Work Gallery",
+    "search": "Search for a folder...",
+    "fileCount": "{{count}} file(s)",
+    "back": "Back",
+    "addToGallery": "Add to gallery",
+    "selectFiles": "Select files for gallery",
+    "selectFolder": "Select folder",
+    "newFolder": "New folder",
+    "newFolderName": "New folder name",
+    "addedToGallery": "Added to gallery!"
+  },
+  "notificationsPage": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications yet.",
+    "newTask": "New task",
+    "newComment": "New comment",
+    "newReply": "New reply",
+    "notification": "Notification",
+    "viewAccomplishment": "View accomplishment"
   }
 }

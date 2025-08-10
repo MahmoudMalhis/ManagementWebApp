@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -78,7 +79,7 @@ const AccomplishmentsList = () => {
       if (!isManager) return;
 
       try {
-        const response = await authAPI.getEmployees();
+        const response = await authAPI.getEmployees({ status: "active" });
         setEmployees(response.data || []);
       } catch (err) {
         console.error("Error fetching employees:", err);
@@ -114,14 +115,14 @@ const AccomplishmentsList = () => {
         setAccomplishments(response.data || []);
       } catch (err) {
         console.error("Error fetching accomplishments:", err);
-        setError(err.message || "Failed to load accomplishments");
+        setError(err.message || t("accomplishments.loadFailed"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchAccomplishments();
-  }, [selectedEmployee, startDate, endDate]);
+  }, [selectedEmployee, startDate, endDate, t]);
 
   const handleExport = async () => {
     try {
@@ -134,14 +135,16 @@ const AccomplishmentsList = () => {
       const response = await accomplishmentsAPI.exportAccomplishments(filters);
 
       const link = document.createElement("a");
-      link.href = `http://localhost:5000${response.filePath}`;
+      const BASE_URL: string =
+        (import.meta as any).env?.VITE_API_URL || "http://localhost:5000";
+      link.href = `${BASE_URL}${response.filePath}`;
       link.download = response.fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (err) {
       console.error("Error exporting accomplishments:", err);
-      setError(err.message || "Failed to export accomplishments");
+      setError(err.message || t("accomplishments.exportFailed"));
     } finally {
       setExporting(false);
     }
@@ -325,7 +328,7 @@ const AccomplishmentsList = () => {
                     </span>
                     {isManager && (
                       <span className="capitalize font-bold">
-                        {accomplishment.employee.name}
+                        {accomplishment.employee?.name}
                       </span>
                     )}
                   </CardTitle>

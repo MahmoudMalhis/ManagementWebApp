@@ -6,6 +6,8 @@ const {
   getMe,
   getEmployees,
   getEmployeeById,
+  deleteEmployee,
+  unarchiveEmployee,
 } = require("../controllers/authController");
 const { protect, authorize } = require("../middlewares/auth");
 
@@ -44,4 +46,13 @@ router.get("/employees", protect, authorize("manager"), getEmployees);
 
 router.get("/employees/:id", protect, authorize("manager"), getEmployeeById);
 
+// Delete employee (manager only)
+router.delete("/employees/:id", protect, authorize("manager"), deleteEmployee);
+
+router.patch(
+  "/employees/:id/unarchive",
+  protect,
+  authorize("manager"),
+  unarchiveEmployee
+);
 module.exports = router;

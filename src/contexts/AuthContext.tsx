@@ -6,7 +6,8 @@ import {
   ReactNode,
 } from "react";
 import { authAPI } from "@/api/api";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface User {
@@ -37,7 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { toast } = useToast();
   const { t } = useTranslation();
 
   // Check if user is authenticated on mount
@@ -80,16 +80,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userData);
       setIsAuthenticated(true);
 
-      toast({
-        title: t("common.success"),
+      toast(t("common.success"), {
+        icon: <CheckCircle color="green" />, 
         description: `${t("auth.login")} ${t("common.success").toLowerCase()}`,
       });
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message || t("auth.invalidCredentials"));
-      toast({
-        variant: "destructive",
-        title: t("common.error"),
+      toast(t("common.error"), {
+        icon: <AlertTriangle color="red" />, 
         description: err.message || t("auth.invalidCredentials"),
       });
     } finally {

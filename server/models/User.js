@@ -16,6 +16,8 @@ const UserSchema = new mongoose.Schema({
     enum: ["manager", "employee"],
     default: "employee",
   },
+  status: { type: String, enum: ["active", "archived"], default: "active" },
+  disabledLogin: { type: Boolean, default: false },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -7,6 +7,7 @@ const path = require("path");
 const connectDB = require("./config/db");
 const taskTitlesRoutes = require("./routes/taskTitles");
 const Notifications = require("./routes/notifications");
+const comparisonsRoutes = require("./routes/comparisons");
 
 // Load env vars
 dotenv.config();
@@ -99,6 +100,7 @@ app.use("/api/accomplishments", accomplishments);
 app.use("/api/task-titles", taskTitlesRoutes);
 app.use("/api/gallery", require("./routes/gallery"));
 app.use("/api/notifications", Notifications);
+app.use("/api/comparisons", comparisonsRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

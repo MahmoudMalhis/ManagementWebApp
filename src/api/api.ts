@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Base URL for API requests. Reads the base API URL from environment
+// variable `VITE_API_URL` (set by Vite) and falls back to localhost if
+// undefined. Appends `/api` automatically.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API_BASE: string = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api`;
 
 // Create axios instance
 const api = axios.create({
@@ -62,13 +67,15 @@ export const authAPI = {
   },
 
   // Get all employees (manager only)
-  getEmployees: async () => {
-    try {
-      const response = await api.get('/auth/employees');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Server error' };
-    }
+
+  getEmployees: async (params: { status?: "active" | "archived" } = {}) => {
+    const response = await api.get("/auth/employees", { params });
+    return response.data;
+  },
+
+  unarchiveEmployee: async (id: string) => {
+    const res = await api.patch(`/auth/employees/${id}/unarchive`);
+    return res.data;
   },
 
 getEmployeeById: async (id: string) => {
@@ -78,7 +85,13 @@ getEmployeeById: async (id: string) => {
   } catch (error) {
     throw error.response?.data || { message: 'Server error' };
   }
-}
+},
+
+deleteEmployee: async (id: string, mode: "hard" | "archive" = "archive") => {
+  const res = await api.delete(`/auth/employees/${id}`, { params: { mode } });
+  return res.data;
+},
+
 };
 
 // Accomplishments API calls
@@ -220,6 +233,45 @@ export const taskTitlesAPI = {
       throw error.response?.data || { message: 'Server error' };
     }
   }
+};
+
+export const comparisonsAPI = {
+  create: (payload: {
+    name?: string;
+    employeeIds: string[];
+    notes?: string;
+    range?: "all"|"week"|"month"|"year"|"custom";
+    startDate?: string;
+    endDate?: string;
+  }) => api.post('/comparisons', payload).then(r => r.data),
+
+  list: () => api.get('/comparisons').then(r => r.data),
+
+  get: (id: string) => api.get(`/comparisons/${id}`).then(r => r.data),
+
+  update: (id: string, payload: Partial<{
+    name: string; notes: string; range: string; startDate: string; endDate: string; employeeIds: string[];
+  }>) => api.put(`/comparisons/${id}`, payload).then(r => r.data),
+
+  remove: (id: string) => api.delete(`/comparisons/${id}`).then(r => r.data),
+};
+
+// Notifications API calls
+export const notificationsAPI = {
+  // page يبدأ من 1
+  get: async (page = 1, limit = 20) => {
+    const res = await api.get("/notifications", { params: { page, limit } });
+    // شكل الاستجابة من السيرفر: { success, data, totalCount, totalPages, currentPage }
+    return res.data;
+  },
+  markAllRead: async () => {
+    const res = await api.post("/notifications/mark-all-read");
+    return res.data;
+  },
+  markRead: async (id: string) => {
+    const res = await api.put(`/notifications/${id}/read`);
+    return res.data;
+  },
 };
 
 export default api;

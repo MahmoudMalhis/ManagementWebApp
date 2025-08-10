@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { authAPI, accomplishmentsAPI } from "@/api/api";
+import { authAPI, accomplishmentsAPI, comparisonsAPI } from "@/api/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,6 +14,20 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { LucideArrowLeft, LucideLoader, LucideFileText } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogTitle,
+} from "@radix-ui/react-alert-dialog";
+import {
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import Popup from "@/components/Popup";
+import SavedComparisonsBar from "@/components/SavedComparisonsBar";
 
 interface Employee {
   _id: string;
@@ -45,6 +59,7 @@ interface Accomplishment {
   createdAt: string;
   files: File[];
   comments: Comment[];
+  taskTitle: { name: string };
 }
 
 interface EmployeeData {
@@ -52,6 +67,9 @@ interface EmployeeData {
   accomplishments: Accomplishment[];
   loading: boolean;
 }
+
+// أعلى الملف (مع بقية الـ imports)
+type QuickRange = "all" | "week" | "month" | "year" | "custom";
 
 const CompareEmployees = () => {
   const location = useLocation();
@@ -69,6 +87,22 @@ const CompareEmployees = () => {
   const [employeesData, setEmployeesData] = useState<EmployeeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [range, setRange] = useState<QuickRange>("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [saveOpen, setSaveOpen] = useState<boolean>(false);
+  const [name, setName] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+
+  function toISO(date: Date) {
+    // YYYY-MM-DD
+    return date.toISOString().split("T")[0];
+  }
+  function addDays(date: Date, days: number) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
 
   // Fetch all employees
   useEffect(() => {
@@ -78,12 +112,12 @@ const CompareEmployees = () => {
         setAllEmployees(response.data || []);
       } catch (err) {
         console.error("Error fetching employees:", err);
-        setError("Failed to load employees list");
+        setError(t("employees.loadFailed"));
       }
     };
 
     fetchEmployees();
-  }, []);
+  }, [t]);
 
   // Fetch accomplishments for selected employees
   useEffect(() => {
@@ -120,6 +154,10 @@ const CompareEmployees = () => {
             const accomplishmentsResponse =
               await accomplishmentsAPI.getAccomplishments({
                 employee: id,
+                ...(startDate
+                  ? { startDate: `${startDate}T00:00:00.000Z` }
+                  : {}),
+                ...(endDate ? { endDate: `${endDate}T23:59:59.999Z` } : {}),
               });
 
             return {
@@ -152,7 +190,7 @@ const CompareEmployees = () => {
         setEmployeesData(updatedEmployeesData);
       } catch (err) {
         console.error("Error in comparison:", err);
-        setError(err.message || "Failed to compare employees");
+        setError(err.message || t("common.error"));
       } finally {
         setLoading(false);
       }
@@ -161,7 +199,7 @@ const CompareEmployees = () => {
     if (allEmployees.length > 0 && selectedIds.length > 0) {
       fetchEmployeeData();
     }
-  }, [selectedIds, allEmployees]);
+  }, [selectedIds, allEmployees, t, startDate, endDate]);
 
   // Handle adding an employee to comparison
   const handleAddEmployee = (id: string) => {
@@ -281,6 +319,71 @@ const CompareEmployees = () => {
       {/* Comparison view */}
       {!loading && !error && employeesData.length > 0 && (
         <div className="space-y-8">
+          <Button
+            className="glass-btn"
+            onClick={() => setSaveOpen(true)}
+            disabled={selectedIds.length === 0}
+          >
+            حفظ هذه المقارنة
+          </Button>
+          <Button
+            variant="outline"
+            className="glass-btn mr-3"
+            onClick={() => navigate("/comparisons")}
+          >
+            المقارنات المحفوظة
+          </Button>
+          <Popup open={saveOpen} onClose={() => setSaveOpen(false)}>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold glassy-text">
+                  حفظ المقارنة
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  className="glass-input w-full p-2"
+                  placeholder="اسم (اختياري)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <textarea
+                  className="glass-input w-full min-h-[96px] p-2"
+                  placeholder="ملاحظات"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  className="glass-btn px-4 py-2"
+                  onClick={() => setSaveOpen(false)}
+                >
+                  إلغاء
+                </button>
+                <button
+                  className="glass-btn px-4 py-2"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    await comparisonsAPI.create({
+                      name,
+                      notes,
+                      employeeIds: selectedIds,
+                      range,
+                      startDate: startDate || undefined,
+                      endDate: endDate || undefined,
+                    });
+                    setSaveOpen(false);
+                    toast.success("تم حفظ المقارنة");
+                  }}
+                >
+                  حفظ
+                </button>
+              </div>
+            </div>
+          </Popup>
           {/* Employee headers */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {employeesData.map((data) => (
@@ -325,15 +428,108 @@ const CompareEmployees = () => {
                           }
                         </span>
                       </div>
+                      <div className="flex justify-between">
+                        <span>{t("accomplishments.notReviewed")}:</span>
+                        <span className="font-medium">
+                          {
+                            data.accomplishments.filter(
+                              (acc) => acc.status === "notReviewed"
+                            ).length
+                          }
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{t("accomplishments.needsModification")}:</span>
+                        <span className="font-medium">
+                          {
+                            data.accomplishments.filter(
+                              (acc) => acc.status === "needsModification"
+                            ).length
+                          }
+                        </span>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
             ))}
           </div>
-
+          <Card className="mb-4 glass-card border-none">
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant={range === "all" ? "default" : "outline"}
+                  className="glass-btn"
+                  onClick={() => {
+                    setRange("all");
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                >
+                  الكل
+                </Button>
+                <Button
+                  variant={range === "week" ? "default" : "outline"}
+                  className="glass-btn"
+                  onClick={() => {
+                    setRange("week");
+                    const today = new Date();
+                    setEndDate(toISO(today));
+                    setStartDate(toISO(addDays(today, -7)));
+                  }}
+                >
+                  أسبوع
+                </Button>
+                <Button
+                  variant={range === "month" ? "default" : "outline"}
+                  className="glass-btn"
+                  onClick={() => {
+                    setRange("month");
+                    const today = new Date();
+                    setEndDate(toISO(today));
+                    setStartDate(toISO(addDays(today, -30)));
+                  }}
+                >
+                  شهر
+                </Button>
+                <Button
+                  variant={range === "year" ? "default" : "outline"}
+                  className="glass-btn"
+                  onClick={() => {
+                    setRange("year");
+                    const today = new Date();
+                    setEndDate(toISO(today));
+                    setStartDate(toISO(addDays(today, -365)));
+                  }}
+                >
+                  سنة
+                </Button>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Label className="glassy-text text-sm">من</Label>
+                  <input
+                    type="date"
+                    className="glass-input px-2 py-1"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setRange("custom");
+                    }}
+                  />
+                  <Label className="glassy-text text-sm">إلى</Label>
+                  <input
+                    type="date"
+                    className="glass-input px-2 py-1"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setRange("custom");
+                    }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <Separator />
-
           {/* Accomplishments comparison by date */}
           <div className="space-y-8">
             {employeesData.length > 0 &&
@@ -353,10 +549,6 @@ const CompareEmployees = () => {
                       )
                       .map((date) => (
                         <div key={date} className="mb-8">
-                          {/* Date header */}
-                          <div className="bg-white/40 dark:bg-slate-900/30 p-3 rounded-md mb-4 shadow glassy-text font-semibold">
-                            <h3>{date}</h3>
-                          </div>
                           {/* Grid layout for employees */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {employeesData.map((empData, index) => {
@@ -379,57 +571,60 @@ const CompareEmployees = () => {
                                           key={acc._id}
                                           className="glass-card border-none"
                                         >
-                                          <CardContent className="py-4">
-                                            <div className="space-y-2">
-                                              <div className="flex justify-between items-center">
-                                                <span className="text-xs text-muted-foreground">
-                                                  {new Date(
-                                                    acc.createdAt
-                                                  ).toLocaleTimeString()}
-                                                </span>
-                                                <span
-                                                  className={`px-2 py-1 rounded-full text-xs ${
-                                                    status === "reviewed"
-                                                      ? "bg-green-100 text-green-800"
+                                          <Link
+                                            to={`/accomplishments/${acc._id}`}
+                                          >
+                                            <CardContent className="py-4">
+                                              <div className="space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                  {/*  */}
+                                                  <span className="text-xs">
+                                                    {acc?.taskTitle?.name}
+                                                  </span>
+                                                  <span
+                                                    className={`px-2 py-1 rounded-full text-xs ${
+                                                      status === "reviewed"
+                                                        ? "bg-green-100 text-green-800"
+                                                        : status ===
+                                                          "needs_modification"
+                                                        ? "bg-red-100 text-red-800"
+                                                        : "bg-amber-100 text-amber-800"
+                                                    }`}
+                                                  >
+                                                    {status === "reviewed"
+                                                      ? t(
+                                                          "accomplishments.reviewed"
+                                                        )
                                                       : status ===
                                                         "needs_modification"
-                                                      ? "bg-red-100 text-red-800"
-                                                      : "bg-amber-100 text-amber-800"
-                                                  }`}
-                                                >
-                                                  {status === "reviewed"
-                                                    ? t(
-                                                        "accomplishments.reviewed"
-                                                      )
-                                                    : status ===
-                                                      "needs_modification"
-                                                    ? t(
-                                                        "accomplishments.needsModification"
-                                                      )
-                                                    : t(
-                                                        "accomplishments.notReviewed"
-                                                      )}
-                                                </span>
-                                              </div>
-                                              <p className="text-sm">
-                                                {acc.description.length > 100
-                                                  ? `${acc.description.substring(
-                                                      0,
-                                                      100
-                                                    )}...`
-                                                  : acc.description}
-                                              </p>
-                                              {acc.files.length > 0 && (
-                                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                  <LucideFileText className="h-3 w-3" />
-                                                  {acc.files.length}{" "}
-                                                  {t(
-                                                    "accomplishments.files"
-                                                  ).toLowerCase()}
+                                                      ? t(
+                                                          "accomplishments.needsModification"
+                                                        )
+                                                      : t(
+                                                          "accomplishments.notReviewed"
+                                                        )}
+                                                  </span>
                                                 </div>
-                                              )}
-                                            </div>
-                                          </CardContent>
+                                                <p className="text-sm">
+                                                  {acc.description.length > 100
+                                                    ? `${acc.description.substring(
+                                                        0,
+                                                        100
+                                                      )}...`
+                                                    : acc.description}
+                                                </p>
+                                                {acc.files.length > 0 && (
+                                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                    <LucideFileText className="h-3 w-3" />
+                                                    {acc.files.length}{" "}
+                                                    {t(
+                                                      "accomplishments.files"
+                                                    ).toLowerCase()}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </CardContent>
+                                          </Link>
                                         </Card>
                                       );
                                     })

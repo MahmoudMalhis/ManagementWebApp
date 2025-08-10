@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import api from "@/api/api";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -12,6 +13,8 @@ export default function GalleryPage() {
   const [showSwiper, setShowSwiper] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [search, setSearch] = useState("");
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     api.get("/gallery/folders").then((res) => setFolders(res.data.folders));
@@ -28,10 +31,12 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-[#c9d6ff] to-[#e2e2e2] flex flex-col">
-      <h1 className="text-2xl font-bold mb-8 text-gray-800">معرض أعمالنا</h1>
+      <h1 className="text-2xl font-bold mb-8 text-gray-800">
+        {t("gallery.title")}
+      </h1>
       <input
         type="text"
-        placeholder="ابحث عن مجلد..."
+        placeholder={t("gallery.search")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-8 glass-input border-none outline-none py-3 px-4 w-full md:w-1/3 text-gray-700 text-base transition-all"
@@ -60,7 +65,7 @@ export default function GalleryPage() {
                 {folder.name}
               </div>
               <div className="text-xs text-[#6386bf]">
-                {folder.filesCount} ملف/صورة
+                {t("gallery.fileCount", { count: folder.filesCount })}
               </div>
             </div>
           ))}
@@ -89,7 +94,9 @@ export default function GalleryPage() {
                 ></path>
               </g>
             </svg>
-            <span className="text-[#6386bf] font-semibold">رجوع</span>
+            <span className="text-[#6386bf] font-semibold">
+              {t("gallery.back")}
+            </span>
           </button>
           <h2 className="font-bold mb-5 text-[#2e3957]">
             {selectedFolder.name}
