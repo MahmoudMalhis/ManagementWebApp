@@ -23,26 +23,32 @@ const app = express();
 
 // Create HTTP server and socket.io instance
 const server = http.createServer(app);
+const allowedOrigins = [
+  "https://managementwebapp-1.onrender.com", // الفرونت على Render
+  "http://localhost:5173", // للتجارب محليًا
+];
+
+// Socket.io
 const io = new Server(server, {
   cors: {
-    origin:
-      process.env.NODE_ENV === "production" ? false : ["http://localhost:5173"],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
 });
 
-// Body parser
-app.use(express.json());
-
-// Enable CORS
+// Express CORS (ضَعها قبل أي routes)
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production" ? false : ["http://localhost:5173"],
+    origin: allowedOrigins,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// (اختياري بس مفيد للـ preflight)
+app.options("*", cors());
 
 // Set static folder for file uploads
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
