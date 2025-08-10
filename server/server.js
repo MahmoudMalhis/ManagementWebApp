@@ -20,6 +20,8 @@ const auth = require("./routes/auth");
 const accomplishments = require("./routes/accomplishments");
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Create HTTP server and socket.io instance
 const server = http.createServer(app);
