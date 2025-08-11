@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LucideBell, LucideLoader } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { useNavigate } from "react-router-dom";
 
 const NotificationsPage = () => {
   const { t } = useTranslation();
@@ -118,7 +119,7 @@ const NotificationsPage = () => {
                       if (!notif.isRead) {
                         await markRead(notif._id);
                       }
-                      window.location.href = `/accomplishments/${notif.data.accomplishmentId}`;
+                     navigate(`/accomplishments/${notif.data.accomplishmentId}`);
                     }}
                   >
                     {t("notificationsPage.viewAccomplishment")}
