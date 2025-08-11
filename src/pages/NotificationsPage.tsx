@@ -7,6 +7,7 @@ import { useNotifications } from "@/contexts/NotificationsContext";
 import { useNavigate } from "react-router-dom";
 
 const NotificationsPage = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const {
     notifications,
