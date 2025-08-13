@@ -26,31 +26,27 @@ app.use(express.urlencoded({ extended: true }));
 // Create HTTP server and socket.io instance
 const server = http.createServer(app);
 const allowedOrigins = [
-  "https://managementwebapp-1.onrender.com", // الفرونت على Render
-  "http://localhost:5173", // للتجارب محليًا
+  "http://localhost:5173",                     // dev
+  "https://management-1-paub.onrender.com",    // اسم واجهتك الصحيح
 ];
 
-// Socket.io
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+// خيارات موحّدة
+const corsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true); // health checks, curl...
+    return allowedOrigins.includes(origin)
+      ? cb(null, true)
+      : cb(new Error("Not allowed by CORS"));
   },
-});
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-// Express CORS (ضَعها قبل أي routes)
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-// (اختياري بس مفيد للـ preflight)
-app.options("*", cors());
+// طبّق CORS قبل أي routes
+app.use(cors(corsOptions));
+// اسمح بالـ preflight بنفس الخيارات (مش cors() بدون خيارات)
+app.options("*", cors(corsOptions));
 
 // Set static folder for file uploads
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
