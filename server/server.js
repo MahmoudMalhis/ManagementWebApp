@@ -1,13 +1,17 @@
+// server.js
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
-const connectDB = require("./config/db");
+
+const connectDB = require("./config/db"); // تأكد أن هذا يُصدّر دالة connectDB()
 const taskTitlesRoutes = require("./routes/taskTitles");
 const Notifications = require("./routes/notifications");
 const comparisonsRoutes = require("./routes/comparisons");
+const auth = require("./routes/auth");
+const accomplishments = require("./routes/accomplishments");
 
 // Load env vars
 dotenv.config();
@@ -15,41 +19,49 @@ dotenv.config();
 // Connect to database
 connectDB();
 
-// Route files
-const auth = require("./routes/auth");
-const accomplishments = require("./routes/accomplishments");
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Create HTTP server and socket.io instance
-const server = http.createServer(app);
+// ====== CORS إعدادات ======
 const allowedOrigins = [
-  "http://localhost:5173",                     // dev
-  "https://management-1-paub.onrender.com",    // اسم واجهتك الصحيح
+  "http://localhost:5173",                   // التطوير
+  "https://management-1-paub.onrender.com",  
+  "https://managementwebapp-1.onrender.com",
 ];
 
-// خيارات موحّدة
 const corsOptions = {
   origin(origin, cb) {
-    if (!origin) return cb(null, true); // health checks, curl...
+    // اسمح لطلبات بدون Origin (مثل health checks / curl)
+    if (!origin) return cb(null, true);
     return allowedOrigins.includes(origin)
       ? cb(null, true)
       : cb(new Error("Not allowed by CORS"));
   },
-  credentials: true,
+  credentials: true, // اتركها true إذا تستخدم كوكيز/جلسات
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 // طبّق CORS قبل أي routes
 app.use(cors(corsOptions));
-// اسمح بالـ preflight بنفس الخيارات (مش cors() بدون خيارات)
+// اسمح بالـ preflight بنفس الخيارات (مهم)
 app.options("*", cors(corsOptions));
 
-// Set static folder for file uploads
+// Static files (الرفع)
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
+
+// ====== HTTP + Socket.IO ======
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  },
+});
+module.exports = { io };
 
 // Socket.io connection handling
 io.on("connection", (socket) => {
@@ -57,40 +69,34 @@ io.on("connection", (socket) => {
 
   // Join room based on role and user id
   socket.on("joinRoom", ({ userId, role }) => {
-    if (role === "manager") {
-      socket.join("managers");
-    }
-    socket.join(userId);
-    console.log(`User ${userId} joined room as ${role}`);
+    if (role === "manager") socket.join("managers");
+    socket.join(String(userId));
+    console.log(`User ${userId} joined as ${role}`);
   });
 
-  // Handle new accomplishment submission
-  socket.on("newAccomplishment", (accomplishmentData) => {
-    // Notify all managers
-    socket.to("managers").emit("newAccomplishmentAlert", accomplishmentData);
+  // Notify all managers about new accomplishment
+  socket.on("newAccomplishment", (data) => {
+    socket.to("managers").emit("newAccomplishmentAlert", data);
   });
 
-  // Handle status change notification (reviewed or needs modification)
+  // Status change notification to a specific employee
   socket.on(
     "accomplishmentStatusChanged",
     ({ accomplishmentId, employeeId, status }) => {
-      // Notify the specific employee
       socket
-        .to(employeeId)
+        .to(String(employeeId))
         .emit("accomplishmentStatusChangedAlert", { accomplishmentId, status });
     }
   );
 
-  // Handle new comment notification
+  // New comment notification
   socket.on("newComment", ({ accomplishmentId, employeeId }) => {
-    // Notify the specific employee
-    socket.to(employeeId).emit("newCommentAlert", { accomplishmentId });
+    socket.to(String(employeeId)).emit("newCommentAlert", { accomplishmentId });
   });
 
-  // Handle employee reply notification
+  // Employee reply notification to a manager
   socket.on("newReply", ({ accomplishmentId, managerId }) => {
-    // Notify the manager
-    socket.to(managerId).emit("newReplyAlert", { accomplishmentId });
+    socket.to(String(managerId)).emit("newReplyAlert", { accomplishmentId });
   });
 
   socket.on("disconnect", () => {
@@ -98,7 +104,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Mount routers
+// ====== API Routes ======
 app.use("/api/auth", auth);
 app.use("/api/accomplishments", accomplishments);
 app.use("/api/task-titles", taskTitlesRoutes);
@@ -106,20 +112,14 @@ app.use("/api/gallery", require("./routes/gallery"));
 app.use("/api/notifications", Notifications);
 app.use("/api/comparisons", comparisonsRoutes);
 
-// Global error handler
+// ====== Global Error Handler ======
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: "Server Error",
-  });
+  res.status(500).json({ success: false, message: "Server Error" });
 });
 
+// ====== Start server ======
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-// Export the socket.io instance for other modules
-module.exports = { io };
